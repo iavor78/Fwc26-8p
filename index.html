@@ -1699,47 +1699,39 @@ function simGroupPhase(){
         m.played=true;
       });
     });
+    s.activeTab="table";
   });
 }
 
-function simKODraw(){
-  // Auto-assign KO draw teams to players after group sim
-  // For each KO round, distribute auto-populated teams evenly across players
+function simKODraw(state){
+  const st = state || S;
   KO_ROUNDS.forEach(r=>{
     const teams=[];
-    S.koMatches[r.key].forEach(m=>{if(m.team1)teams.push(m.team1);if(m.team2)teams.push(m.team2);});
+    st.koMatches[r.key].forEach(m=>{if(m.team1)teams.push(m.team1);if(m.team2)teams.push(m.team2);});
     if(!teams.length) return;
-    const n=r.slots;
     const shuffled=[...teams].sort(()=>Math.random()-0.5);
-    for(let pi=0;pi<8;pi++) S.koDraw[r.key][pi]=[];
-    shuffled.forEach((t,i)=>{ S.koDraw[r.key][i%8].push(t); });
+    for(let pi=0;pi<8;pi++) st.koDraw[r.key][pi]=[];
+    shuffled.forEach((t,i)=>{ st.koDraw[r.key][i%8].push(t); });
   });
 }
-
 function simKORounds(){
   if(!confirm("Simulate all KO round matches with random scores?")) return;
-  // Simulate round by round so auto-populate can cascade
   const rounds=["r32","r16","qf","sf","third","final"];
   update(s=>{
-    // First run auto-populate to seed teams
     autoPopulateKO(s);
-    simKODraw(); // assign KO teams to players
-
-    // Then simulate each round, re-running auto-populate after each
+    simKODraw(s);
     rounds.forEach(key=>{
       s.koMatches[key].forEach(m=>{
         if(!m.team1||!m.team2) return;
-        // Avoid draws in KO (re-roll if equal)
         let g1=randGoals(), g2=randGoals();
         while(g1===g2){ g1=randGoals(); g2=randGoals(); }
         m.goals1=String(g1); m.goals2=String(g2); m.played=true;
       });
       autoPopulateKO(s);
-      simKODraw();
+      simKODraw(s);
     });
   });
 }
-
 function simClear(){
   if(!confirm("Clear all simulated data? Player names will be kept.")) return;
   const names=[...S.playerNames];
