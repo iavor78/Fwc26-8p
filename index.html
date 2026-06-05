@@ -412,6 +412,7 @@ const FB_CONFIG={
 };
 
 let firestoreDb=null;
+let adminPassword=null; // loaded from Firebase, only admin can set
 let unsubscribe=null;
 let lastSaveHash="";
 let remoteUpdatePending=false;
@@ -422,6 +423,14 @@ async function initFirebase(){
   const app=initializeApp(FB_CONFIG);
   firestoreDb=getFirestore(app);
   const ref=doc(firestoreDb,"games","stl-wc26-8p");
+
+  // Load admin config (password) from separate doc
+  const adminRef=doc(firestoreDb,"games","stl-wc26-8p-admin");
+  onSnapshot(adminRef,snap=>{
+    if(snap.exists()&&snap.data().password){
+      adminPassword=snap.data().password;
+    }
+  });
 
   // onSnapshot only — no blocking reads, app already shown
   unsubscribe=onSnapshot(ref,snap=>{
@@ -1680,6 +1689,12 @@ function renderPlayers(){
     </div>
   </div>
 
+  <div class="card mt10" style="border-color:#1a1a2a">
+    <div class="section-label" style="color:#74b3ce">🔑 Admin Password</div>
+    <div style="font-size:11px;color:#ccc;margin-bottom:10px">Password-protect the lock/unlock button. Only someone with the password can lock or unlock the app.</div>
+    <button class="action-btn" style="margin:0;background:#0d0d1a;border:1px solid #1a1a3a;color:#74b3ce" onclick="setAdminPassword()">${adminPassword?"Change Password":"Set Password"}</button>
+  </div>
+
   <div class="card mt10" style="border-color:#2a0a0a">
     <div class="section-label" style="color:#e63946">⚠ Reset All Data</div>
     <div style="font-size:11px;color:#ccc;margin-bottom:10px">Removes everything including player names.</div>
@@ -1852,19 +1867,51 @@ function simClear(){
 }
 
 function toggleLock(){
-  update(s=>{ s.locked=!s.locked; });
+  if(S&&S.locked){
+    // Unlock: require password
+    if(adminPassword){
+      const entered=prompt("Enter admin password to unlock:");
+      if(entered===null) return; // cancelled
+      if(entered!==adminPassword){
+        alert("Incorrect password.");
+        return;
+      }
+    }
+    update(s=>{s.locked=false;});
+  } else {
+    // Lock: require password (so random users can't lock either)
+    if(adminPassword){
+      const entered=prompt("Enter admin password to lock:");
+      if(entered===null) return;
+      if(entered!==adminPassword){
+        alert("Incorrect password.");
+        return;
+      }
+    }
+    update(s=>{s.locked=true;});
+  }
   applyLock();
 }
-
 function applyLock(){
   const locked = S&&S.locked;
   const overlay = document.getElementById('lockOverlay');
   const btn = document.getElementById('lockBtn');
   if(overlay) overlay.style.display = locked ? 'block' : 'none';
   if(btn) btn.textContent = locked ? '🔒 Locked' : '🔓 Unlocked';
-  // Still allow Players tab and lock button itself
 }
 
+async function setAdminPassword(){
+  if(!firestoreDb){ alert("Firebase not connected."); return; }
+  const current=adminPassword?prompt("Enter current password to confirm:"):"";
+  if(adminPassword&&current!==adminPassword){ alert("Incorrect current password."); return; }
+  const newPwd=prompt("Enter new admin password (leave blank to remove):");
+  if(newPwd===null) return;
+  const {doc,setDoc}=await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+  const adminRef=doc(firestoreDb,"games","stl-wc26-8p-admin");
+  await setDoc(adminRef,{password:newPwd.trim()});
+  adminPassword=newPwd.trim()||null;
+  alert(newPwd.trim()?"Password set!":"Password removed.");
+}
 function doReset(){
   if(!confirm("Reset EVERYTHING including player names? This cannot be undone.")) return;
   S=initState(); save(); render();
