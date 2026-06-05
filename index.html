@@ -1769,18 +1769,42 @@ function simKORounds(){
   const rounds=["r32","r16","qf","sf","third","final"];
   update(s=>{
     autoPopulateKO(s);
-    // Only assign to top 4 qualifiers
     const qualifiers=getKOQualifiers();
     const koPlayers=qualifiers.length>=4?qualifiers:[0,1,2,3];
-    function assignRound(key){
+
+    function assignRoundNoConflict(key){
+      const opponentOf={};
+      s.koMatches[key].forEach(m=>{
+        if(m.team1&&m.team2){opponentOf[m.team1]=m.team2;opponentOf[m.team2]=m.team1;}
+      });
       const teams=[];
       s.koMatches[key].forEach(m=>{if(m.team1)teams.push(m.team1);if(m.team2)teams.push(m.team2);});
       if(!teams.length) return;
-      const shuffled=[...teams].sort(()=>Math.random()-0.5);
       for(let pi=0;pi<8;pi++) s.koDraw[key][pi]=[];
-      shuffled.forEach((t,i)=>{ s.koDraw[key][koPlayers[i%4]].push(t); });
+      for(let attempt=0;attempt<100;attempt++){
+        const order=[...teams].sort(()=>Math.random()-0.5);
+        const assigned={};
+        for(let pi=0;pi<8;pi++) s.koDraw[key][pi]=[];
+        let valid=true;
+        for(const team of order){
+          const opp=opponentOf[team];
+          const oppOwner=opp&&assigned[opp]!==undefined?assigned[opp]:-1;
+          const counts={};
+          koPlayers.forEach(pi=>{ counts[pi]=(s.koDraw[key][pi]||[]).length; });
+          const eligible=koPlayers.filter(pi=>pi!==oppOwner);
+          if(!eligible.length){valid=false;break;}
+          eligible.sort((a,b)=>counts[a]-counts[b]);
+          const minCount=counts[eligible[0]];
+          const tied=eligible.filter(pi=>counts[pi]===minCount);
+          const pi=tied[Math.floor(Math.random()*tied.length)];
+          assigned[team]=pi;
+          s.koDraw[key][pi].push(team);
+        }
+        if(valid) break;
+      }
     }
-    assignRound("r32");
+
+    assignRoundNoConflict("r32");
     rounds.forEach(key=>{
       s.koMatches[key].forEach(m=>{
         if(!m.team1||!m.team2) return;
@@ -1789,7 +1813,7 @@ function simKORounds(){
         m.goals1=String(g1); m.goals2=String(g2); m.played=true;
       });
       autoPopulateKO(s);
-      assignRound(key);
+      assignRoundNoConflict(key);
     });
   });
 }
@@ -1799,15 +1823,68 @@ function simKOAssign(key){
     autoPopulateKO(s);
     const qualifiers=getKOQualifiers();
     const koPlayers=qualifiers.length>=4?qualifiers:[0,1,2,3];
+
+    // Build match opponent map: team -> opponent in this round
+    const opponentOf={};
+    s.koMatches[key].forEach(m=>{
+      if(m.team1&&m.team2){
+        opponentOf[m.team1]=m.team2;
+        opponentOf[m.team2]=m.team1;
+      }
+    });
+
     const teams=[];
     s.koMatches[key].forEach(m=>{if(m.team1)teams.push(m.team1);if(m.team2)teams.push(m.team2);});
     if(!teams.length){ alert("No teams available yet for this round."); return; }
+
+    // Shuffle teams
     const shuffled=[...teams].sort(()=>Math.random()-0.5);
+
+    // Clear draw
     for(let pi=0;pi<8;pi++) s.koDraw[key][pi]=[];
-    shuffled.forEach((t,i)=>{ s.koDraw[key][koPlayers[i%4]].push(t); });
+
+    // Assign with conflict check: no player gets both teams of the same match
+    // Use backtracking-lite: try to assign each team to a player, retry on conflict
+    const assigned={}; // team -> playerIndex
+    let attempts=0;
+    const maxAttempts=200;
+
+    while(Object.keys(assigned).length<shuffled.length && attempts<maxAttempts){
+      attempts++;
+      // Reset and retry
+      Object.keys(assigned).forEach(t=>delete assigned[t]);
+      for(let pi=0;pi<8;pi++) s.koDraw[key][pi]=[];
+
+      const order=[...shuffled].sort(()=>Math.random()-0.5);
+      let valid=true;
+
+      for(const team of order){
+        // Find eligible players: in koPlayers, no conflict with already-assigned opponent
+        const opp=opponentOf[team];
+        const oppOwner=opp&&assigned[opp]!==undefined?assigned[opp]:-1;
+        // Count how many teams each player already has
+        const counts={};
+        koPlayers.forEach(pi=>{ counts[pi]=(s.koDraw[key][pi]||[]).length; });
+        const eligible=koPlayers.filter(pi=>pi!==oppOwner);
+        if(eligible.length===0){ valid=false; break; }
+        // Pick player with fewest teams (most balanced), break ties randomly
+        eligible.sort((a,b)=>counts[a]-counts[b]);
+        const minCount=counts[eligible[0]];
+        const tied=eligible.filter(pi=>counts[pi]===minCount);
+        const pi=tied[Math.floor(Math.random()*tied.length)];
+        assigned[team]=pi;
+        if(!s.koDraw[key][pi]) s.koDraw[key][pi]=[];
+        s.koDraw[key][pi].push(team);
+      }
+
+      if(valid && Object.keys(assigned).length===shuffled.length) break;
+    }
+
+    if(Object.keys(assigned).length<shuffled.length){
+      alert("Could not assign without conflicts after "+maxAttempts+" attempts. Try again.");
+    }
   });
 }
-
 function simKOMatches(key){
   if(!requireAdmin()) return;
   update(s=>{
@@ -1851,7 +1928,6 @@ function simOneKORound(key){
   simKOAssign(key);
   simKOMatches(key);
 }
-
 function simClear(){
   if(!requireAdmin()) return;
   if(!confirm("Clear all simulated data? Player names will be kept.")) return;
