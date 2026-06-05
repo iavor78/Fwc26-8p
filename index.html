@@ -1695,11 +1695,11 @@ function renderPlayers(){
     <button class="action-btn" style="margin:0;background:#0d0d1a;border:1px solid #1a1a3a;color:#74b3ce" onclick="setAdminPassword()">${adminPassword?"Change Password":"Set Password"}</button>
   </div>
 
-  <div class="card mt10" style="border-color:#2a0a0a">
+  ${!S.locked ? `<div class="card mt10" style="border-color:#2a0a0a">
     <div class="section-label" style="color:#e63946">⚠ Reset All Data</div>
     <div style="font-size:11px;color:#ccc;margin-bottom:10px">Removes everything including player names.</div>
     <button class="action-btn btn-red" style="margin:0" onclick="doReset()">Reset All Data</button>
-  </div>`;
+  </div>` : ""}`;
   return h;
 }
 
