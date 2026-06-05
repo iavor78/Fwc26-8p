@@ -1,4 +1,4 @@
-const CACHE = "stl-wc26-v4";
+const CACHE = "stl-wc26-8p-v1";
 const FILES = ["./index.html", "./manifest.json"];
 
 self.addEventListener("install", e => {
@@ -14,7 +14,7 @@ self.addEventListener("activate", e => {
 });
 
 self.addEventListener("fetch", e => {
-  // Network first, fall back to cache — ensures fresh content
+  // Network first — always serve fresh content
   e.respondWith(
     fetch(e.request).catch(() => caches.match(e.request))
   );
