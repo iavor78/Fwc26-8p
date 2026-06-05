@@ -89,8 +89,8 @@
       <!-- title text over flags -->
       <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
         <div style="font-size:9px;letter-spacing:3px;color:#e63946;font-family:'Courier New',monospace;text-transform:uppercase">FIFA World Cup 2026 · USA / CAN / MEX</div>
-        <div style="font-size:19px;font-weight:700;letter-spacing:-0.3px;color:#f0f0f0;font-family:Georgia,serif;text-shadow:0 1px 8px rgba(0,0,0,0.8)">Special Super League WC26</div>
-        <div style="font-size:9px;color:#888;font-family:'Courier New',monospace">8 players · 48 teams · 104 matches</div>
+        <div style="font-size:19px;font-weight:700;letter-spacing:-0.3px;color:#f0f0f0;font-family:Georgia,serif;text-shadow:0 1px 8px rgba(0,0,0,0.8)">Special Team League WC26</div>
+        <div style="font-size:9px;color:#888;font-family:'Courier New',monospace">4 players · 48 teams · 104 matches</div>
       </div>
     </div>
     <div style="position:absolute;top:6px;right:12px;display:flex;align-items:center;gap:8px">
@@ -309,22 +309,22 @@ const MATCH_SCHEDULE = {
   71: ["2026-06-27", 17,  0, "New York NJ"],
   72: ["2026-06-27", 17,  0, "Philadelphia"],
   // R32
-  73: ["2026-06-28", 15,  0, "Los Angeles"],
-  74: ["2026-06-29", 13,  0, "Houston"],
-  75: ["2026-06-29", 16, 30, "Boston"],
-  76: ["2026-06-29", 21,  0, "Monterrey"],
-  77: ["2026-06-30", 13,  0, "Dallas"],
-  78: ["2026-06-30", 17,  0, "New York NJ"],
-  79: ["2026-06-30", 21,  0, "Mexico City"],
-  80: ["2026-07-01", 12,  0, "Atlanta"],
-  81: ["2026-07-01", 16,  0, "Seattle"],
-  82: ["2026-07-01", 20,  0, "San Francisco"],
-  83: ["2026-07-02", 15,  0, "Los Angeles"],
-  84: ["2026-07-02", 19,  0, "Toronto"],
-  85: ["2026-07-02", 23,  0, "Vancouver"],
-  86: ["2026-07-03", 14,  0, "Dallas"],
-  87: ["2026-07-03", 18,  0, "Miami"],
-  88: ["2026-07-03", 21, 30, "Kansas City"],
+  73: ["2026-06-28", 21,  0, "Los Angeles"],     // 2A vs 2B · SoFi Stadium
+  74: ["2026-06-29", 19,  0, "Boston"],          // 1E vs T3 · Gillette Stadium
+  75: ["2026-06-29", 22,  0, "Monterrey"],       // 1F vs 2C · Estadio BBVA
+  76: ["2026-06-29", 16,  0, "Houston"],         // 1C vs 2F · NRG Stadium
+  77: ["2026-06-30", 22,  0, "New York NJ"],     // 1I vs T3 · MetLife Stadium
+  78: ["2026-06-30", 19,  0, "Dallas"],          // 2E vs 2I · AT&T Stadium
+  79: ["2026-06-30", 16,  0, "Mexico City"],     // 1A vs T3 · Estadio Azteca
+  80: ["2026-07-01", 19,  0, "Atlanta"],         // 1L vs T3 · Mercedes-Benz Stadium
+  81: ["2026-07-01", 16,  0, "San Francisco"],   // 1D vs T3 · Levi's Stadium
+  82: ["2026-07-01", 22,  0, "Seattle"],         // 1G vs T3 · Lumen Field
+  83: ["2026-07-02", 20,  0, "Toronto"],         // 2K vs 2L · BMO Field
+  84: ["2026-07-02", 23,  0, "Los Angeles"],     // 1H vs 2J · SoFi Stadium
+  85: ["2026-07-02", 17,  0, "Vancouver"],       // 1B vs T3 · BC Place
+  86: ["2026-07-03", 20,  0, "Miami"],           // 1J vs 2H · Hard Rock Stadium
+  87: ["2026-07-03", 17,  0, "Kansas City"],     // 1K vs T3 · Arrowhead Stadium
+  88: ["2026-07-03", 23,  0, "Dallas"],          // 2D vs 2G · AT&T Stadium
   // R16
   89: ["2026-07-04", 13,  0, "Houston"],
   90: ["2026-07-04", 17,  0, "Philadelphia"],
@@ -533,22 +533,22 @@ function pts(gf,ga){return gf>ga?3:gf===ga?1:0;}
 // Each entry: [matchNum, team1Source, team2Source]
 // Source format: "1A"=1st Group A, "2B"=2nd Group B, "T3"=one of best 3rd placed
 const R32_PATHS = [
-  [73,  "2A", "2B"],
-  [74,  "1C", "2F"],
-  [75,  "1E", "T3"],  // T3 = best 3rd
-  [76,  "1F", "2C"],
-  [77,  "2E", "2I"],
-  [78,  "1I", "T3"],
-  [79,  "1A", "T3"],
-  [80,  "1L", "T3"],
-  [81,  "1G", "T3"],
-  [82,  "1D", "T3"],
-  [83,  "1H", "2J"],
-  [84,  "2K", "2L"],
-  [85,  "1B", "T3"],
-  [86,  "2D", "2G"],
-  [87,  "1J", "2H"],
-  [88,  "1K", "T3"],
+  [73,  "2A",  "2B"],          // Sun Jun 28 · SoFi Stadium, Inglewood
+  [74,  "1E",  "T3"],          // Mon Jun 29 · Gillette Stadium, Foxborough
+  [75,  "1F",  "2C"],          // Mon Jun 29 · Estadio BBVA, Monterrey
+  [76,  "1C",  "2F"],          // Mon Jun 29 · NRG Stadium, Houston
+  [77,  "1I",  "T3"],          // Tue Jun 30 · MetLife Stadium, New Jersey
+  [78,  "2E",  "2I"],          // Tue Jun 30 · AT&T Stadium, Arlington
+  [79,  "1A",  "T3"],          // Tue Jun 30 · Estadio Azteca, Mexico City
+  [80,  "1L",  "T3"],          // Wed Jul 01 · Mercedes-Benz Stadium, Atlanta
+  [81,  "1D",  "T3"],          // Wed Jul 01 · Levi's Stadium, Santa Clara
+  [82,  "1G",  "T3"],          // Wed Jul 01 · Lumen Field, Seattle
+  [83,  "2K",  "2L"],          // Thu Jul 02 · BMO Field, Toronto
+  [84,  "1H",  "2J"],          // Thu Jul 02 · SoFi Stadium, Inglewood
+  [85,  "1B",  "T3"],          // Thu Jul 02 · BC Place, Vancouver
+  [86,  "1J",  "2H"],          // Fri Jul 03 · Hard Rock Stadium, Miami
+  [87,  "1K",  "T3"],          // Fri Jul 03 · Arrowhead Stadium, Kansas City
+  [88,  "2D",  "2G"],          // Fri Jul 03 · AT&T Stadium, Arlington
 ];
 
 // R16 feed: winner of which R32 match feeds each R16 slot
@@ -1086,10 +1086,19 @@ function renderBracket(){
 
   function teamLabel(team,num,slot){
     if(team) return flag(team)+" "+esc(team);
+    // R32: show group qualifier label
+    const r32path=R32_PATHS.find(p=>p[0]===num);
+    if(r32path){
+      const src=r32path[slot+1];
+      if(src==="T3") return `<span style="font-style:italic;color:#666">Best 3rd</span>`;
+      const pos=src[0]==="1"?"1st":"2nd";
+      return `<span style="font-style:italic;color:#666">${pos} Grp ${src[1]}</span>`;
+    }
+    // R16+: show winner of feeder match
     const feeders=FEEDERS[num];
-    if(!feeders) return "TBD";
+    if(!feeders) return `<span style="font-style:italic;color:#444">TBD</span>`;
     const f=feeders[slot];
-    return num===103?`Loser M${f}`:`W M${f}`;
+    return num===103?`<span style="font-style:italic;color:#666">Loser M${f}</span>`:`<span style="font-style:italic;color:#666">W M${f}</span>`;
   }
 
   function bm(num,extraStyle=""){
