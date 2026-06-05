@@ -1273,6 +1273,77 @@ function renderDraw(){
   return h;
 }
 
+function renderTeamPanel(teams, cols){
+  // Sort by FIFA ranking (lower number = better)
+  const sorted=[...teams].sort((a,b)=>rank(a)-rank(b));
+  const perCol=Math.ceil(sorted.length/cols);
+  // Build cols
+  const columns=[];
+  for(let i=0;i<cols;i++){
+    columns.push(sorted.slice(i*perCol, (i+1)*perCol));
+  }
+  let h=`<div style="margin-top:18px;border-top:1px solid #1a1a1a;padding-top:14px">`;
+  h+=`<div style="font-size:9px;color:#555;letter-spacing:1px;margin-bottom:10px;text-align:center">TEAM OVERVIEW · sorted by FIFA ranking · greyed out when assigned</div>`;
+  h+=`<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:6px">`;
+  columns.forEach(col=>{
+    h+=`<div style="display:flex;flex-direction:column;gap:3px">`;
+    col.forEach(t=>{
+      // Find owner across all draws
+      const pi=getOwnerIndex(t);
+      const assigned=pi>=0;
+      const col2=assigned?PLAYER_COLORS[pi]:"#555";
+      const opacity=assigned?"opacity:0.35":"opacity:1";
+      h+=`<div style="display:flex;align-items:center;gap:4px;padding:3px 5px;border-radius:4px;background:#111;${opacity}">
+        ${flag(t)}
+        <span style="font-size:10px;color:${col2};flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t)}</span>
+        <span style="font-size:9px;color:#333">#${rank(t)}</span>
+      </div>`;
+    });
+    h+=`</div>`;
+  });
+  h+=`</div></div>`;
+  return h;
+}
+
+function renderKOTeamPanel(phase){
+  const autoTeams=[];
+  S.koMatches[phase].forEach(m=>{if(m.team1)autoTeams.push(m.team1);if(m.team2)autoTeams.push(m.team2);});
+  if(!autoTeams.length) return "";
+  const round=KO_ROUNDS.find(r=>r.key===phase);
+  // cols based on round
+  const colMap={r32:4,r16:4,qf:2,sf:2,third:1,final:1};
+  const cols=colMap[phase]||2;
+  // For KO, assigned = team in koDraw[phase][pi]
+  const sorted=[...autoTeams].sort((a,b)=>rank(a)-rank(b));
+  const perCol=Math.ceil(sorted.length/cols);
+  const columns=[];
+  for(let i=0;i<cols;i++) columns.push(sorted.slice(i*perCol,(i+1)*perCol));
+  let h=`<div style="margin-top:18px;border-top:1px solid #1a1a1a;padding-top:14px">`;
+  h+=`<div style="font-size:9px;color:#555;letter-spacing:1px;margin-bottom:10px;text-align:center">${round.label.toUpperCase()} TEAMS · sorted by FIFA ranking · greyed out when assigned</div>`;
+  h+=`<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:6px">`;
+  columns.forEach(col=>{
+    h+=`<div style="display:flex;flex-direction:column;gap:3px">`;
+    col.forEach(t=>{
+      // Find if assigned in this KO round
+      let assignedPi=-1;
+      for(let pi=0;pi<8;pi++){
+        if((S.koDraw[phase][pi]||[]).includes(t)){assignedPi=pi;break;}
+      }
+      const assigned=assignedPi>=0;
+      const teamCol=assigned?PLAYER_COLORS[assignedPi]:"#888";
+      const op=assigned?"opacity:0.35":"opacity:1";
+      h+=`<div style="display:flex;align-items:center;gap:4px;padding:3px 5px;border-radius:4px;background:#111;${op}">
+        ${flag(t)}
+        <span style="font-size:10px;color:${teamCol};flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t)}</span>
+        <span style="font-size:9px;color:#333">#${rank(t)}</span>
+      </div>`;
+    });
+    h+=`</div>`;
+  });
+  h+=`</div></div>`;
+  return h;
+}
+
 function renderGroupDraw(){
   const g=S.activeGroup||"A";
   const teams=GROUPS[g];
@@ -1320,6 +1391,10 @@ function renderGroupDraw(){
     </div>`;
   });
   h+=`</div>`;
+  // All 48 teams panel — 4 columns, sorted by FIFA ranking
+  const allTeams=[];
+  GROUP_KEYS.forEach(g=>GROUPS[g].forEach(t=>allTeams.push(t)));
+  h+=renderTeamPanel(allTeams,4);
   return h;
 }
 function renderKODraw(phase){
@@ -1422,6 +1497,7 @@ function renderKODraw(phase){
     }
     h+=`</div>`;
   });
+  h+=renderKOTeamPanel(phase);
   return h;
 }
 
