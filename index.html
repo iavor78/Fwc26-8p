@@ -1602,89 +1602,40 @@ function simAssignTeams(){
   update(s=>{
     GROUP_KEYS.forEach(g=>{s.groupDraw[g]=new Array(8).fill(null);});
 
-    // Build a deterministic balanced assignment:
-    // Create 12 groups × 4 slots = 48 assignments
-    // Each player must appear exactly 6 times (48/8=6)
-    // Each group must have 4 different players
-    // Use a structured round-robin then shuffle within groups
-
-    // Step 1: create a base balanced schedule
-    // Assign players 0-7 to 12 groups in a balanced way
-    // 12 groups, 4 players each = 48 slots, 8 players × 6 each
-    // Use Latin rectangle approach: cycle through players
-    let playerOrder=[0,1,2,3,4,5,6,7];
-    // Shuffle players for randomness
-    for(let i=7;i>0;i--){const j=Math.floor(Math.random()*(i+1));[playerOrder[i],playerOrder[j]]=[playerOrder[j],playerOrder[i]];}
-
-    // Each player gets exactly 6 groups: assign groups in rounds
-    // Round-robin: groups 0-11, pick 4 players per group cycling through playerOrder
-    const playerGroupCount=new Array(8).fill(0);
-    const groupAssignments={}; // group -> [pi,pi,pi,pi]
-    GROUP_KEYS.forEach((g,gi)=>{
-      groupAssignments[g]=[];
-    });
-
-    // Interleave so each player gets spread across groups
-    // Create assignment matrix: 8 players × 6 groups each
-    // Shuffle which 6 of 12 groups each player gets
-    const groupIndices=[...Array(12).keys()];
-    // Create player-to-groups mapping ensuring each group has 4 players
-    // This is equivalent to a 12×8 binary matrix with row sum=4 and col sum=6
-    // Generate it by: create 12 groups of 4 players each from shuffled player list
-    const allSlots=[]; // 48 (groupIdx, playerIdx) pairs
-    for(let round=0;round<6;round++){
-      // Each round, each player gets 1 group
-      // Shuffle players for this round
-      const roundPlayers=[...playerOrder];
-      for(let i=7;i>0;i--){const j=Math.floor(Math.random()*(i+1));[roundPlayers[i],roundPlayers[j]]=[roundPlayers[j],roundPlayers[i]];}
-      // Assign 2 groups per round (12 groups / 6 rounds = 2)
-      // groups for this round: gi = round*2 and round*2+1
-    }
-
-    // Cleaner approach: generate balanced pairs
-    // Expand player list to 48 (each appears 6 times), shuffle, assign 4 per group
-    let expandedPlayers=[];
-    for(let pi=0;pi<8;pi++) for(let k=0;k<6;k++) expandedPlayers.push(pi);
+    // Guaranteed balanced assignment: expand-shuffle-swap
+    // Each player appears exactly 6 times, each group gets exactly 4 different players
+    const pool=[];
+    for(let pi=0;pi<8;pi++) for(let k=0;k<6;k++) pool.push(pi);
     // Fisher-Yates shuffle
-    for(let i=47;i>0;i--){const j=Math.floor(Math.random()*(i+1));[expandedPlayers[i],expandedPlayers[j]]=[expandedPlayers[j],expandedPlayers[i]];}
+    for(let i=47;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}
 
-    // Assign 4 players per group from expandedPlayers, but check no duplicates per group
-    // If there's a conflict, swap with a later slot
-    const groupPlayerSets={}; GROUP_KEYS.forEach(g=>{groupPlayerSets[g]=new Set();});
+    const groupPlayers=Array.from({length:12},()=>[]);
     let ptr=0;
-    GROUP_KEYS.forEach((g,gi)=>{
-      const needed=4;
-      let assigned=0;
-      // Try to fill from expandedPlayers, swapping if needed
-      for(let attempt=0;assigned<needed&&ptr+attempt<48;){
-        const pi=expandedPlayers[ptr+attempt];
-        if(!groupPlayerSets[g].has(pi)){
-          // Take it
-          [expandedPlayers[ptr], expandedPlayers[ptr+attempt]]=[expandedPlayers[ptr+attempt],expandedPlayers[ptr]];
-          groupPlayerSets[g].add(pi);
+    for(let gi=0;gi<12;gi++){
+      while(groupPlayers[gi].length<4){
+        const pi=pool[ptr];
+        if(!groupPlayers[gi].includes(pi)){
+          groupPlayers[gi].push(pi);
           ptr++;
-          assigned++;
-          attempt=0;
         } else {
-          attempt++;
-          if(ptr+attempt>=48){
-            // Fallback: pick any remaining player not in this group
-            const remaining=expandedPlayers.slice(ptr);
-            const idx=remaining.findIndex(p=>!groupPlayerSets[g].has(p));
-            if(idx>=0){
-              [expandedPlayers[ptr],expandedPlayers[ptr+idx]]=[expandedPlayers[ptr+idx],expandedPlayers[ptr]];
+          // Swap with next valid slot
+          let swapped=false;
+          for(let j=ptr+1;j<48;j++){
+            if(!groupPlayers[gi].includes(pool[j])){
+              [pool[ptr],pool[j]]=[pool[j],pool[ptr]];
+              groupPlayers[gi].push(pool[ptr]);
+              ptr++;
+              swapped=true;
+              break;
             }
           }
+          if(!swapped) break; // safety
         }
       }
-    });
-
-    // Now assign teams: within each group, shuffle team slots among the 4 players
-    GROUP_KEYS.forEach((g,gi)=>{
-      const players=[...groupPlayerSets[g]];
+      // Assign team slots randomly within this group
       const slots=[0,1,2,3].sort(()=>Math.random()-0.5);
-      players.forEach((pi,i)=>{s.groupDraw[g][pi]=slots[i];});
-    });
+      groupPlayers[gi].forEach((pi,i)=>{s.groupDraw[GROUP_KEYS[gi]][pi]=slots[i];});
+    }
 
     KO_ROUNDS.forEach(r=>{s.koDraw[r.key]=[[],[],[],[],[],[],[],[]];});
   });
