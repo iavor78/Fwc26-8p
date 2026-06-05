@@ -1649,31 +1649,29 @@ function renderPlayers(){
         onclick="simGroupPhase()">
         2 · Simulate group phase
       </button>
-      <div style="border-top:1px solid #1a2a1a;margin:2px 0;font-size:9px;color:#555;padding-top:4px;letter-spacing:1px">KO ROUNDS (assign + results)</div>
-      <button class="action-btn" style="background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;margin:0"
-        onclick="simOneKORound('r32')">
-        3 · R32 — assign &amp; simulate
-      </button>
-      <button class="action-btn" style="background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;margin:0"
-        onclick="simOneKORound('r16')">
-        4 · R16 — assign &amp; simulate
-      </button>
-      <button class="action-btn" style="background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;margin:0"
-        onclick="simOneKORound('qf')">
-        5 · QF — assign &amp; simulate
-      </button>
-      <button class="action-btn" style="background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;margin:0"
-        onclick="simOneKORound('sf')">
-        6 · SF — assign &amp; simulate
-      </button>
-      <button class="action-btn" style="background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;margin:0"
-        onclick="simOneKORound('third')">
-        7 · 3rd Place — assign &amp; simulate
-      </button>
-      <button class="action-btn" style="background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;margin:0"
-        onclick="simOneKORound('final')">
-        8 · Final — assign &amp; simulate
-      </button>
+      <div style="border-top:1px solid #1a2a1a;margin:4px 0 6px;font-size:9px;color:#666;padding-top:6px;letter-spacing:1px">KO ROUNDS</div>`;
+
+  // KO round rows
+  const koRoundDefs=[
+    {key:'r32',label:'R32'},
+    {key:'r16',label:'R16'},
+    {key:'qf', label:'QF'},
+    {key:'sf', label:'SF'},
+    {key:'third',label:'3rd'},
+    {key:'final',label:'Final'},
+  ];
+  koRoundDefs.forEach(({key,label},i)=>{
+    h+=`<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+      <span style="font-size:11px;color:#888;width:36px;flex-shrink:0">${label}</span>
+      <button style="flex:1;background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;padding:6px 4px;border-radius:6px;font-size:11px;cursor:pointer"
+        onclick="simKOAssign('${key}')">Assign</button>
+      <button style="flex:1;background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;padding:6px 4px;border-radius:6px;font-size:11px;cursor:pointer"
+        onclick="simKOMatches('${key}')">Simulate</button>
+      <button style="flex:1;background:#1a1200;border:1px solid #2a2200;color:#888;padding:6px 4px;border-radius:6px;font-size:11px;cursor:pointer"
+        onclick="simKOClear('${key}')">Clear</button>
+    </div>`;
+  });
+  h+=`<div style="height:4px"></div
       <div style="border-top:1px solid #1a1a1a;margin:4px 0"></div>
       <button class="action-btn" style="background:#1a1200;border:1px solid #2a2200;color:#888;margin:0"
         onclick="simClear()">
@@ -1791,37 +1789,62 @@ function simKORounds(){
     });
   });
 }
-function simOneKORound(key){
-  const round = KO_ROUNDS.find(r=>r.key===key);
-  if(!round){ alert("Unknown round: "+key); return; }
-  if(!confirm("Simulate "+round.label+" (auto-populate teams, assign draw to top 4 players, simulate matches)?")) return;
+function simKOAssign(key){
   update(s=>{
     autoPopulateKO(s);
-
-    // Only assign teams to top 4 qualifiers
-    const qualifiers = getKOQualifiers();
-    const koPlayers = qualifiers.length>=4 ? qualifiers : [0,1,2,3];
-
+    const qualifiers=getKOQualifiers();
+    const koPlayers=qualifiers.length>=4?qualifiers:[0,1,2,3];
     const teams=[];
     s.koMatches[key].forEach(m=>{if(m.team1)teams.push(m.team1);if(m.team2)teams.push(m.team2);});
-    if(teams.length){
-      const shuffled=[...teams].sort(()=>Math.random()-0.5);
-      // Clear all 8 slots first
-      for(let pi=0;pi<8;pi++) s.koDraw[key][pi]=[];
-      // Distribute only among top 4
-      shuffled.forEach((t,i)=>{ s.koDraw[key][koPlayers[i%4]].push(t); });
-    }
+    if(!teams.length){ alert("No teams available yet for this round."); return; }
+    const shuffled=[...teams].sort(()=>Math.random()-0.5);
+    for(let pi=0;pi<8;pi++) s.koDraw[key][pi]=[];
+    shuffled.forEach((t,i)=>{ s.koDraw[key][koPlayers[i%4]].push(t); });
+  });
+}
 
+function simKOMatches(key){
+  update(s=>{
+    let count=0;
     s.koMatches[key].forEach(m=>{
       if(!m.team1||!m.team2) return;
       let g1=randGoals(), g2=randGoals();
       while(g1===g2){ g1=randGoals(); g2=randGoals(); }
       m.goals1=String(g1); m.goals2=String(g2); m.played=true;
+      count++;
     });
+    if(!count){ alert("No matches ready — assign teams first."); return; }
     autoPopulateKO(s);
     s.activeTab="table";
   });
 }
+
+function simKOClear(key){
+  if(!confirm("Clear all data for this round (draw assignments and scores)?")) return;
+  update(s=>{
+    for(let pi=0;pi<8;pi++) s.koDraw[key][pi]=[];
+    s.koMatches[key].forEach(m=>{
+      m.goals1=""; m.goals2=""; m.played=false; m.penWinner=null;
+    });
+    // Also clear any rounds that depend on this one (cascade)
+    const order=["r32","r16","qf","sf","third","final"];
+    const idx=order.indexOf(key);
+    if(idx>=0){
+      order.slice(idx+1).forEach(laterKey=>{
+        for(let pi=0;pi<8;pi++) s.koDraw[laterKey][pi]=[];
+        s.koMatches[laterKey].forEach(m=>{
+          m.team1=""; m.team2=""; m.goals1=""; m.goals2=""; m.played=false; m.penWinner=null;
+        });
+      });
+    }
+  });
+}
+
+function simOneKORound(key){
+  simKOAssign(key);
+  simKOMatches(key);
+}
+
 function simClear(){
   if(!confirm("Clear all simulated data? Player names will be kept.")) return;
   const names=[...S.playerNames];
