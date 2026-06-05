@@ -55,7 +55,7 @@
   .bracket-col{display:flex;flex-direction:column;min-width:148px}
   .bracket-col-label{font-size:10px;color:#444;letter-spacing:1px;text-align:center;margin-bottom:4px;font-weight:700;text-transform:uppercase}
   .bracket-match{background:#111;border-radius:6px;padding:7px 9px;border:1px solid #1a1a1a}
-  .bracket-match-num{font-size:9px;color:#2a2a2a;margin-bottom:4px;letter-spacing:.8px}
+  .bracket-match-num{font-size:9px;color:#666;margin-bottom:4px;letter-spacing:.8px}
   .bracket-team{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
   .bracket-score{font-size:12px;font-weight:700;color:#555;min-width:14px;text-align:center;flex-shrink:0}
   .flex{display:flex}.gap4{gap:4px}.gap6{gap:6px}.gap8{gap:8px}.gap10{gap:10px}.gap12{gap:12px}
@@ -914,13 +914,13 @@ function renderGroups(){
             ${qual}
           </div>
         </td>
-        <td style="text-align:center;padding:7px 6px;font-size:11px;color:#777">${row.played}</td>
-        <td style="text-align:center;padding:7px 6px;font-size:11px;color:#777">${rW}</td>
-        <td style="text-align:center;padding:7px 6px;font-size:11px;color:#777">${rD}</td>
-        <td style="text-align:center;padding:7px 6px;font-size:11px;color:#777">${rL}</td>
+        <td style="text-align:center;padding:7px 6px;font-size:11px;color:#bbb">${row.played}</td>
+        <td style="text-align:center;padding:7px 6px;font-size:11px;color:#bbb">${rW}</td>
+        <td style="text-align:center;padding:7px 6px;font-size:11px;color:#bbb">${rD}</td>
+        <td style="text-align:center;padding:7px 6px;font-size:11px;color:#bbb">${rL}</td>
         <td style="text-align:center;padding:7px 6px;font-size:11px;color:${row.gd>0?"#2a9d8f":row.gd<0?"#e63946":"#777"}">${row.gd>0?"+":""}${row.gd}</td>
-        <td style="text-align:center;padding:7px 6px;font-size:11px;color:#777">${row.gf}</td>
-        <td style="text-align:center;padding:7px 6px;font-size:11px;color:#777">${row.ga}</td>
+        <td style="text-align:center;padding:7px 6px;font-size:11px;color:#bbb">${row.gf}</td>
+        <td style="text-align:center;padding:7px 6px;font-size:11px;color:#bbb">${row.ga}</td>
         <td style="text-align:center;padding:7px 8px;font-size:13px;font-weight:700;color:${col}">${row.pts}</td>
       </tr>`;
     });
@@ -957,10 +957,10 @@ function renderGroups(){
           </div>
         </td>
         <td style="text-align:center;padding:7px 6px;font-size:11px;color:#555">${row.group}</td>
-        <td style="text-align:center;padding:7px 6px;font-size:11px;color:#777">${row.played}</td>
+        <td style="text-align:center;padding:7px 6px;font-size:11px;color:#bbb">${row.played}</td>
         <td style="text-align:center;padding:7px 6px;font-size:11px;color:${row.gd>0?"#2a9d8f":row.gd<0?"#e63946":"#777"}">${row.gd>0?"+":""}${row.gd}</td>
-        <td style="text-align:center;padding:7px 6px;font-size:11px;color:#777">${row.gf}</td>
-        <td style="text-align:center;padding:7px 6px;font-size:11px;color:#777">${row.ga}</td>
+        <td style="text-align:center;padding:7px 6px;font-size:11px;color:#bbb">${row.gf}</td>
+        <td style="text-align:center;padding:7px 6px;font-size:11px;color:#bbb">${row.ga}</td>
         <td style="text-align:center;padding:7px 8px;font-size:13px;font-weight:700;color:${col}">${row.pts}</td>
       </tr>`;
     });
@@ -1006,10 +1006,12 @@ function getKOQualifiers(){
 }
 
 function renderTable(){
-  const rows=computeTable();
-  let h=`<div style="font-size:10px;color:#444;text-align:center;letter-spacing:1px;margin-bottom:14px">SPECIAL TEAM LEAGUE · 8 PLAYERS</div>`;
+  const rows=computeTable(); // full table for display order
+  const groupRows=computeGroupOnlyTable(); // group-stage only for KO qualification
+  const qualifiedNames=new Set(groupRows.slice(0,4).map(r=>r.name));
+  let h=`<div style="font-size:10px;color:#bbb;text-align:center;letter-spacing:1px;margin-bottom:14px">SPECIAL TEAM LEAGUE · 8 PLAYERS</div>`;
   h+=`<div class="card" style="padding:0;overflow:hidden"><table style="width:100%;border-collapse:collapse">`;
-  h+=`<thead><tr style="font-size:9px;color:#333;letter-spacing:1px">
+  h+=`<thead><tr style="font-size:9px;color:#888;letter-spacing:1px">
     <th style="text-align:left;padding:6px 12px;font-weight:400">#</th>
     <th style="text-align:left;padding:6px 4px;font-weight:400">PLAYER</th>
     <th style="padding:6px 5px;font-weight:400">P</th>
@@ -1021,33 +1023,38 @@ function renderTable(){
     <th style="padding:6px 8px;font-weight:400">PTS</th>
   </tr></thead><tbody>`;
   const medals=["🥇","🥈","🥉","","","","",""];
+  let qualLineDone=false;
   rows.forEach((r,i)=>{
     const pi=S.playerNames.indexOf(r.name);
     const col=pi>=0?PLAYER_COLORS[pi]:"#aaa";
-    const isQ=i<4;
+    const isQ=qualifiedNames.has(r.name);
+    // Insert qualification line between last qualifier and first non-qualifier
+    if(!isQ && !qualLineDone){
+      qualLineDone=true;
+      h+=`<tr><td colspan="9" style="padding:0">
+        <div style="font-size:9px;color:#555;text-align:center;padding:3px;letter-spacing:1px;border-top:1px solid #333;border-bottom:1px solid #1a1a1a">── KO QUALIFICATION LINE ──</div>
+      </td></tr>`;
+    }
     h+=`<tr style="border-top:1px solid #111;${isQ?"":"opacity:0.55"}">
       <td style="padding:8px 10px 8px 12px;border-left:2px solid ${isQ?col:"#1a1a1a"}">
         <span style="font-size:13px">${medals[i]||""}</span>
-        ${isQ?`<span style="font-size:8px;color:#2a9d8f;margin-left:2px">KO</span>`:`<span style="font-size:8px;color:#333;margin-left:2px">out</span>`}
+        ${isQ?`<span style="font-size:8px;color:#2a9d8f;margin-left:2px">KO</span>`:`<span style="font-size:8px;color:#444;margin-left:2px">out</span>`}
       </td>
       <td style="padding:8px 4px"><div style="display:flex;align-items:center;gap:6px">
         <span class="player-dot" style="background:${col}"></span>
         <span style="font-size:13px;font-weight:700;color:${col}">${esc(r.name)}</span>
       </div></td>
-      <td style="text-align:center;padding:8px 5px;font-size:11px;color:#777">${r.played}</td>
-      <td style="text-align:center;padding:8px 5px;font-size:11px;color:#777">${r.won}</td>
-      <td style="text-align:center;padding:8px 5px;font-size:11px;color:#777">${r.drawn}</td>
-      <td style="text-align:center;padding:8px 5px;font-size:11px;color:#777">${r.lost}</td>
-      <td style="text-align:center;padding:8px 5px;font-size:11px;color:${r.gd>0?"#2a9d8f":r.gd<0?"#e63946":"#777"}">${r.gd>0?"+":""}${r.gd}</td>
-      <td style="text-align:center;padding:8px 5px;font-size:11px;color:#777">${r.gf}</td>
+      <td style="text-align:center;padding:8px 5px;font-size:11px;color:#aaa">${r.played}</td>
+      <td style="text-align:center;padding:8px 5px;font-size:11px;color:#aaa">${r.won}</td>
+      <td style="text-align:center;padding:8px 5px;font-size:11px;color:#aaa">${r.drawn}</td>
+      <td style="text-align:center;padding:8px 5px;font-size:11px;color:#aaa">${r.lost}</td>
+      <td style="text-align:center;padding:8px 5px;font-size:11px;color:${r.gd>0?"#2a9d8f":r.gd<0?"#e63946":"#aaa"}">${r.gd>0?"+":""}${r.gd}</td>
+      <td style="text-align:center;padding:8px 5px;font-size:11px;color:#aaa">${r.gf}</td>
       <td style="text-align:center;padding:8px 8px;font-size:14px;font-weight:700;color:${col}">${r.pts}</td>
     </tr>`;
-    if(i===3){h+=`<tr><td colspan="9" style="padding:0">
-      <div style="font-size:9px;color:#2a2a2a;text-align:center;padding:3px;letter-spacing:1px;border-top:1px solid #2a2a2a">── KO QUALIFICATION LINE ──</div>
-    </td></tr>`;}
   });
   h+=`</tbody></table></div>`;
-  h+=`<div style="margin-top:14px;font-size:10px;color:#2a2a2a;text-align:center;letter-spacing:1px">TOP 4 ADVANCE TO KNOCKOUT · W=3 · D=1 · L=0</div>`;
+  h+=`<div style="margin-top:14px;font-size:10px;color:#555;text-align:center;letter-spacing:1px">TOP 4 ADVANCE TO KNOCKOUT · W=3 · D=1 · L=0</div>`;
   return h;
 }
 function getOwnerIndex(team, koRoundKey=null){
@@ -1598,44 +1605,89 @@ function simAssignTeams(){
   if(!confirm("Randomly assign teams to all 8 players (6 groups each, 4 players per group)?")) return;
   update(s=>{
     GROUP_KEYS.forEach(g=>{s.groupDraw[g]=new Array(8).fill(null);});
-    // Build balanced assignment: each player gets exactly 6 groups
-    // Each group gets exactly 4 players
-    // Use a round-robin style: create list of all (group, teamSlot) pairs,
-    // shuffle, then assign to players round-robin ensuring balance
-    const assignments = [];
-    GROUP_KEYS.forEach(g=>{
-      [0,1,2,3].forEach(slot=>assignments.push({g,slot}));
-    });
-    // Shuffle
-    for(let i=assignments.length-1;i>0;i--){
-      const j=Math.floor(Math.random()*(i+1));
-      [assignments[i],assignments[j]]=[assignments[j],assignments[i]];
-    }
-    // Assign ensuring each player gets exactly 6 and each group gets 4 different players
-    const playerCount=new Array(8).fill(0);
-    const groupPlayerSet={};
-    GROUP_KEYS.forEach(g=>{groupPlayerSet[g]=new Set();});
 
-    // Sort assignments by group to handle group constraint first
-    // Use a constraint-aware greedy: for each assignment pick eligible player
-    const result=[]; // {g, slot, pi}
-    assignments.forEach(({g,slot})=>{
-      // Eligible: hasn't been assigned in this group + hasn't hit 6 groups yet
-      const eligible=[...Array(8).keys()].filter(pi=>
-        !groupPlayerSet[g].has(pi) && playerCount[pi]<6
-      );
-      if(eligible.length===0){
-        console.warn("No eligible player for group",g,"slot",slot);
-        return;
+    // Build a deterministic balanced assignment:
+    // Create 12 groups × 4 slots = 48 assignments
+    // Each player must appear exactly 6 times (48/8=6)
+    // Each group must have 4 different players
+    // Use a structured round-robin then shuffle within groups
+
+    // Step 1: create a base balanced schedule
+    // Assign players 0-7 to 12 groups in a balanced way
+    // 12 groups, 4 players each = 48 slots, 8 players × 6 each
+    // Use Latin rectangle approach: cycle through players
+    let playerOrder=[0,1,2,3,4,5,6,7];
+    // Shuffle players for randomness
+    for(let i=7;i>0;i--){const j=Math.floor(Math.random()*(i+1));[playerOrder[i],playerOrder[j]]=[playerOrder[j],playerOrder[i]];}
+
+    // Each player gets exactly 6 groups: assign groups in rounds
+    // Round-robin: groups 0-11, pick 4 players per group cycling through playerOrder
+    const playerGroupCount=new Array(8).fill(0);
+    const groupAssignments={}; // group -> [pi,pi,pi,pi]
+    GROUP_KEYS.forEach((g,gi)=>{
+      groupAssignments[g]=[];
+    });
+
+    // Interleave so each player gets spread across groups
+    // Create assignment matrix: 8 players × 6 groups each
+    // Shuffle which 6 of 12 groups each player gets
+    const groupIndices=[...Array(12).keys()];
+    // Create player-to-groups mapping ensuring each group has 4 players
+    // This is equivalent to a 12×8 binary matrix with row sum=4 and col sum=6
+    // Generate it by: create 12 groups of 4 players each from shuffled player list
+    const allSlots=[]; // 48 (groupIdx, playerIdx) pairs
+    for(let round=0;round<6;round++){
+      // Each round, each player gets 1 group
+      // Shuffle players for this round
+      const roundPlayers=[...playerOrder];
+      for(let i=7;i>0;i--){const j=Math.floor(Math.random()*(i+1));[roundPlayers[i],roundPlayers[j]]=[roundPlayers[j],roundPlayers[i]];}
+      // Assign 2 groups per round (12 groups / 6 rounds = 2)
+      // groups for this round: gi = round*2 and round*2+1
+    }
+
+    // Cleaner approach: generate balanced pairs
+    // Expand player list to 48 (each appears 6 times), shuffle, assign 4 per group
+    let expandedPlayers=[];
+    for(let pi=0;pi<8;pi++) for(let k=0;k<6;k++) expandedPlayers.push(pi);
+    // Fisher-Yates shuffle
+    for(let i=47;i>0;i--){const j=Math.floor(Math.random()*(i+1));[expandedPlayers[i],expandedPlayers[j]]=[expandedPlayers[j],expandedPlayers[i]];}
+
+    // Assign 4 players per group from expandedPlayers, but check no duplicates per group
+    // If there's a conflict, swap with a later slot
+    const groupPlayerSets={}; GROUP_KEYS.forEach(g=>{groupPlayerSets[g]=new Set();});
+    let ptr=0;
+    GROUP_KEYS.forEach((g,gi)=>{
+      const needed=4;
+      let assigned=0;
+      // Try to fill from expandedPlayers, swapping if needed
+      for(let attempt=0;assigned<needed&&ptr+attempt<48;){
+        const pi=expandedPlayers[ptr+attempt];
+        if(!groupPlayerSets[g].has(pi)){
+          // Take it
+          [expandedPlayers[ptr], expandedPlayers[ptr+attempt]]=[expandedPlayers[ptr+attempt],expandedPlayers[ptr]];
+          groupPlayerSets[g].add(pi);
+          ptr++;
+          assigned++;
+          attempt=0;
+        } else {
+          attempt++;
+          if(ptr+attempt>=48){
+            // Fallback: pick any remaining player not in this group
+            const remaining=expandedPlayers.slice(ptr);
+            const idx=remaining.findIndex(p=>!groupPlayerSets[g].has(p));
+            if(idx>=0){
+              [expandedPlayers[ptr],expandedPlayers[ptr+idx]]=[expandedPlayers[ptr+idx],expandedPlayers[ptr]];
+            }
+          }
+        }
       }
-      // Pick the player with fewest assignments (most need) + shuffle among tied
-      eligible.sort((a,b)=>playerCount[a]-playerCount[b]);
-      const minCount=playerCount[eligible[0]];
-      const tied=eligible.filter(pi=>playerCount[pi]===minCount);
-      const pi=tied[Math.floor(Math.random()*tied.length)];
-      s.groupDraw[g][pi]=slot;
-      playerCount[pi]++;
-      groupPlayerSet[g].add(pi);
+    });
+
+    // Now assign teams: within each group, shuffle team slots among the 4 players
+    GROUP_KEYS.forEach((g,gi)=>{
+      const players=[...groupPlayerSets[g]];
+      const slots=[0,1,2,3].sort(()=>Math.random()-0.5);
+      players.forEach((pi,i)=>{s.groupDraw[g][pi]=slots[i];});
     });
 
     KO_ROUNDS.forEach(r=>{s.koDraw[r.key]=[[],[],[],[],[],[],[],[]];});
