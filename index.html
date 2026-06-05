@@ -1531,6 +1531,24 @@ function renderGroupMatches(){
   return h;
 }
 
+function koSlotLabel(matchNum, slot){
+  // Returns the qualifier source label for a pending KO match slot
+  // slot: 0=team1, 1=team2
+  const r32path = R32_PATHS.find(p=>p[0]===matchNum);
+  if(r32path){
+    const src = r32path[slot+1];
+    if(src==="T3") return "Best 3rd";
+    return (src[0]==="1"?"1st ":"2nd ")+"Grp "+src[1];
+  }
+  // R16+: find feeder match
+  const allPaths = [...R16_PATHS, ...QF_PATHS, ...SF_PATHS];
+  const path = allPaths.find(p=>p[0]===matchNum);
+  if(path) return "W M"+path[slot+1];
+  if(matchNum===103){ return slot===0?"Loser M101":"Loser M102"; }
+  if(matchNum===104){ return slot===0?"W M101":"W M102"; }
+  return "TBD";
+}
+
 function renderKOMatches(phase){
   const round=KO_ROUNDS.find(r=>r.key===phase);
   let h=`<div class="section-label">${round.label}</div>`;
@@ -1550,7 +1568,7 @@ function renderKOMatches(phase){
       <div class="flex items-center gap6">
         <div class="flex-1">
           <div style="font-size:10px;color:${hCol};font-weight:700;margin-bottom:2px">${o1>=0?esc(S.playerNames[o1]):"—"}</div>
-          <div style="font-size:13px;color:${pending1?"#444":"#ddd"};font-weight:600;font-style:${pending1?"italic":"normal"}">${m.team1?flag(m.team1)+" ":""}${esc(m.team1||"TBD")}</div>
+          <div style="font-size:13px;color:${pending1?"#444":"#ddd"};font-weight:600;font-style:${pending1?"italic":"normal"}">${m.team1?flag(m.team1)+" "+esc(m.team1):koSlotLabel(m.matchNum,0)}</div>
           <div style="font-size:10px;color:#333;margin-top:2px">${m.team1?"FIFA #"+rank(m.team1):""}</div>
         </div>
         <div class="flex items-center gap6" style="flex-shrink:0">
@@ -1564,7 +1582,7 @@ function renderKOMatches(phase){
         </div>
         <div class="flex-1" style="text-align:right">
           <div style="font-size:10px;color:${aCol};font-weight:700;margin-bottom:2px">${o2>=0?esc(S.playerNames[o2]):"—"}</div>
-          <div style="font-size:13px;color:${pending2?"#444":"#ddd"};font-weight:600;font-style:${pending2?"italic":"normal"}">${m.team2?flag(m.team2)+" ":""}${esc(m.team2||"TBD")}</div>
+          <div style="font-size:13px;color:${pending2?"#444":"#ddd"};font-weight:600;font-style:${pending2?"italic":"normal"}">${m.team2?flag(m.team2)+" "+esc(m.team2):koSlotLabel(m.matchNum,1)}</div>
           <div style="font-size:10px;color:#333;margin-top:2px">${m.team2?"FIFA #"+rank(m.team2):""}</div>
         </div>
         <button class="done-btn ${m.played?'active':''}"
