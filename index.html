@@ -495,9 +495,18 @@ function loadFromURL(){
 }
 function mergeState(saved){
   const fresh=initState();
+  // Rebuild groupMatches from current constants — preserves scores but corrects match numbers
+  const groupMatches={};
+  GROUP_KEYS.forEach(g=>{
+    groupMatches[g]=fresh.groupMatches[g].map(freshM=>{
+      const savedM=saved.groupMatches&&saved.groupMatches[g]&&
+        saved.groupMatches[g].find(m=>m.home===freshM.home&&m.away===freshM.away);
+      return savedM?{...freshM,homeGoals:savedM.homeGoals||"",awayGoals:savedM.awayGoals||"",played:savedM.played||false}:freshM;
+    });
+  });
   return {...fresh,...saved,
     groupDraw:saved.groupDraw||fresh.groupDraw,
-    groupMatches:saved.groupMatches||fresh.groupMatches,
+    groupMatches,
     koDraw:saved.koDraw||fresh.koDraw,
     koMatches:saved.koMatches||fresh.koMatches,
     playerNames:(saved.playerNames&&saved.playerNames.length>0)?saved.playerNames:fresh.playerNames,
