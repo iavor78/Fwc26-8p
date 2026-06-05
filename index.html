@@ -1708,6 +1708,7 @@ function rnd(n){ return Math.floor(Math.random()*n); }
 function randGoals(){ return rnd(5); } // 0-4
 
 function simAssignTeams(){
+  if(!requireAdmin()) return;
   if(!confirm("Randomly assign teams to all 8 players (6 groups each, 4 players per group)?")) return;
   update(s=>{
     GROUP_KEYS.forEach(g=>{s.groupDraw[g]=new Array(8).fill(null);});
@@ -1751,6 +1752,7 @@ function simAssignTeams(){
   });
 }
 function simGroupPhase(){
+  if(!requireAdmin()) return;
   if(!confirm("Simulate all 72 group stage matches with random scores?")) return;
   update(s=>{
     GROUP_KEYS.forEach(g=>{
@@ -1776,6 +1778,7 @@ function simKODraw(state){
   });
 }
 function simKORounds(){
+  if(!requireAdmin()) return;
   if(!confirm("Simulate all KO round matches with random scores?")) return;
   const rounds=["r32","r16","qf","sf","third","final"];
   update(s=>{
@@ -1805,6 +1808,7 @@ function simKORounds(){
   });
 }
 function simKOAssign(key){
+  if(!requireAdmin()) return;
   update(s=>{
     autoPopulateKO(s);
     const qualifiers=getKOQualifiers();
@@ -1819,6 +1823,7 @@ function simKOAssign(key){
 }
 
 function simKOMatches(key){
+  if(!requireAdmin()) return;
   update(s=>{
     let count=0;
     s.koMatches[key].forEach(m=>{
@@ -1835,6 +1840,7 @@ function simKOMatches(key){
 }
 
 function simKOClear(key){
+  if(!requireAdmin()) return;
   if(!confirm("Clear all data for this round (draw assignments and scores)?")) return;
   update(s=>{
     for(let pi=0;pi<8;pi++) s.koDraw[key][pi]=[];
@@ -1861,6 +1867,7 @@ function simOneKORound(key){
 }
 
 function simClear(){
+  if(!requireAdmin()) return;
   if(!confirm("Clear all simulated data? Player names will be kept.")) return;
   const names=[...S.playerNames];
   S=initState(); S.playerNames=names; save(); render();
@@ -1912,7 +1919,16 @@ async function setAdminPassword(){
   adminPassword=newPwd.trim()||null;
   alert(newPwd.trim()?"Password set!":"Password removed.");
 }
+function requireAdmin(){
+  if(!adminPassword) return true; // no password set, allow
+  const entered=prompt("Enter admin password:");
+  if(entered===null) return false;
+  if(entered!==adminPassword){ alert("Incorrect password."); return false; }
+  return true;
+}
+
 function doReset(){
+  if(!requireAdmin()) return;
   if(!confirm("Reset EVERYTHING including player names? This cannot be undone.")) return;
   S=initState(); save(); render();
 }
