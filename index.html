@@ -38,12 +38,12 @@
   .done-btn{padding:5px 10px;border-radius:8px;border:none;cursor:pointer;font-size:10px;font-weight:700;background:#1a1a1a;color:#555;transition:all .2s;flex-shrink:0}
   .done-btn.active{background:#1a3a1a;color:#2a9d8f}
   .player-dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
-  .save-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,10,0.55);border-top:1px solid #1a1a1a;padding:10px 14px;z-index:20;padding-bottom:max(10px,env(safe-area-inset-bottom));backdrop-filter:blur(12px)}
+  .save-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,10,0.55);border-top:1px solid #1a1a1a;padding:6px 14px;z-index:20;padding-bottom:max(6px,env(safe-area-inset-bottom));backdrop-filter:blur(12px)}
   .save-url-box{flex:1;background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:7px 10px;font-size:10px;font-family:monospace;color:#666;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;cursor:text;user-select:all;-webkit-user-select:all}
   .copy-btn{padding:7px 14px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:11px;flex-shrink:0;transition:all .2s;background:#e63946;color:#fff}
   .copy-btn.copied{background:#1a3a1a;color:#2a9d8f}
   .copy-btn:disabled{background:#1a1a1a;color:#333;cursor:default}
-  .content{max-width:100%;margin:0 auto;padding:16px 14px 160px}
+  .content{max-width:100%;margin:0 auto;padding:16px 14px 60px}
   #loading{display:flex;align-items:center;justify-content:center;min-height:100vh;color:#888;font-size:14px}#loading.hidden{display:none!important}
   table{width:100%;border-collapse:collapse;font-family:'Courier New',monospace;font-size:12px}
   th{padding:7px 4px;text-align:center;color:#555;font-weight:700;letter-spacing:.8px;font-size:10px;border-bottom:2px solid #222}
@@ -94,7 +94,6 @@
       </div>
     </div>
     <div style="position:absolute;top:6px;right:12px;display:flex;align-items:center;gap:8px">
-      <span id="loadStatus" style="font-size:10px;color:#2a9d8f;font-family:monospace"></span>
       <span id="syncFlash" style="font-size:10px;color:#2a9d8f;font-family:monospace;opacity:0;transition:opacity 0.5s">↓ synced</span>
     </div>
   </div>
@@ -113,18 +112,9 @@
   </div>
   <div class="content" id="content" style="position:relative;z-index:1"></div>
   <div class="save-bar">
-    <div style="max-width:100%;margin:0 auto">
-      <div class="flex items-center justify-between mb6">
-        <div class="fs10" style="color:#333;letter-spacing:1px;text-transform:uppercase">🔗 Share with other players</div>
-        <button id="lockBtn" onclick="toggleLock()" style="background:none;border:1px solid #444;border-radius:6px;cursor:pointer;font-size:12px;color:#888;padding:3px 8px;flex-shrink:0">🔓 Unlocked</button>
-      </div>
-      <div class="flex gap8 items-center">
-        <input id="saveUrlBox" readonly value="Loading…"
-          onclick="this.select()"
-          style="flex:1;background:#111;border:1px solid #1e1e1e;border-radius:8px;padding:7px 10px;font-size:10px;font-family:monospace;color:#888;min-width:0;outline:none;cursor:text"/>
-        <button class="copy-btn" id="copyBtn" disabled onclick="copyURL()">Copy</button>
-      </div>
-      <div class="fs10 mt4" style="color:#888">Firebase keeps everyone in sync — just share this URL.</div>
+    <div style="display:flex;justify-content:flex-end;align-items:center">
+      <span id="loadStatus" style="font-size:10px;color:#2a9d8f;font-family:monospace;margin-right:10px"></span>
+      <button id="lockBtn" onclick="toggleLock()" style="background:none;border:1px solid #444;border-radius:6px;cursor:pointer;font-size:12px;color:#888;padding:3px 10px">🔓 Unlocked</button>
     </div>
   </div>
 </div>
