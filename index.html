@@ -1767,7 +1767,18 @@ function simKORounds(){
   const rounds=["r32","r16","qf","sf","third","final"];
   update(s=>{
     autoPopulateKO(s);
-    simKODraw(s);
+    // Only assign to top 4 qualifiers
+    const qualifiers=getKOQualifiers();
+    const koPlayers=qualifiers.length>=4?qualifiers:[0,1,2,3];
+    function assignRound(key){
+      const teams=[];
+      s.koMatches[key].forEach(m=>{if(m.team1)teams.push(m.team1);if(m.team2)teams.push(m.team2);});
+      if(!teams.length) return;
+      const shuffled=[...teams].sort(()=>Math.random()-0.5);
+      for(let pi=0;pi<8;pi++) s.koDraw[key][pi]=[];
+      shuffled.forEach((t,i)=>{ s.koDraw[key][koPlayers[i%4]].push(t); });
+    }
+    assignRound("r32");
     rounds.forEach(key=>{
       s.koMatches[key].forEach(m=>{
         if(!m.team1||!m.team2) return;
@@ -1776,38 +1787,41 @@ function simKORounds(){
         m.goals1=String(g1); m.goals2=String(g2); m.played=true;
       });
       autoPopulateKO(s);
-      simKODraw(s);
+      assignRound(key);
     });
   });
 }
 function simOneKORound(key){
   const round = KO_ROUNDS.find(r=>r.key===key);
   if(!round){ alert("Unknown round: "+key); return; }
-  if(!confirm("Simulate "+round.label+" (auto-populate teams, assign draw, simulate matches)?")) return;
+  if(!confirm("Simulate "+round.label+" (auto-populate teams, assign draw to top 4 players, simulate matches)?")) return;
   update(s=>{
-    // Auto-populate this round's teams from previous results
     autoPopulateKO(s);
-    // Assign draw for this round only
+
+    // Only assign teams to top 4 qualifiers
+    const qualifiers = getKOQualifiers();
+    const koPlayers = qualifiers.length>=4 ? qualifiers : [0,1,2,3];
+
     const teams=[];
     s.koMatches[key].forEach(m=>{if(m.team1)teams.push(m.team1);if(m.team2)teams.push(m.team2);});
     if(teams.length){
       const shuffled=[...teams].sort(()=>Math.random()-0.5);
+      // Clear all 8 slots first
       for(let pi=0;pi<8;pi++) s.koDraw[key][pi]=[];
-      shuffled.forEach((t,i)=>{ s.koDraw[key][i%8].push(t); });
+      // Distribute only among top 4
+      shuffled.forEach((t,i)=>{ s.koDraw[key][koPlayers[i%4]].push(t); });
     }
-    // Simulate matches for this round
+
     s.koMatches[key].forEach(m=>{
       if(!m.team1||!m.team2) return;
       let g1=randGoals(), g2=randGoals();
       while(g1===g2){ g1=randGoals(); g2=randGoals(); }
       m.goals1=String(g1); m.goals2=String(g2); m.played=true;
     });
-    // Auto-populate next round with winners
     autoPopulateKO(s);
     s.activeTab="table";
   });
 }
-
 function simClear(){
   if(!confirm("Clear all simulated data? Player names will be kept.")) return;
   const names=[...S.playerNames];
