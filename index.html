@@ -1571,11 +1571,32 @@ function renderPlayers(){
       </button>
       <button class="action-btn" style="background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;margin:0"
         onclick="simGroupPhase()">
-        2 · Simulate group phase results
+        2 · Simulate group phase
+      </button>
+      <div style="border-top:1px solid #1a2a1a;margin:2px 0;font-size:9px;color:#555;padding-top:4px;letter-spacing:1px">KO ROUNDS (assign + results)</div>
+      <button class="action-btn" style="background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;margin:0"
+        onclick="simOneKORound('r32')">
+        3 · R32 — assign &amp; simulate
       </button>
       <button class="action-btn" style="background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;margin:0"
-        onclick="simKORounds()">
-        3 · Simulate KO round results
+        onclick="simOneKORound('r16')">
+        4 · R16 — assign &amp; simulate
+      </button>
+      <button class="action-btn" style="background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;margin:0"
+        onclick="simOneKORound('qf')">
+        5 · QF — assign &amp; simulate
+      </button>
+      <button class="action-btn" style="background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;margin:0"
+        onclick="simOneKORound('sf')">
+        6 · SF — assign &amp; simulate
+      </button>
+      <button class="action-btn" style="background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;margin:0"
+        onclick="simOneKORound('third')">
+        7 · 3rd Place — assign &amp; simulate
+      </button>
+      <button class="action-btn" style="background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;margin:0"
+        onclick="simOneKORound('final')">
+        8 · Final — assign &amp; simulate
       </button>
       <div style="border-top:1px solid #1a1a1a;margin:4px 0"></div>
       <button class="action-btn" style="background:#1a1200;border:1px solid #2a2200;color:#888;margin:0"
@@ -1683,6 +1704,34 @@ function simKORounds(){
     });
   });
 }
+function simOneKORound(key){
+  const round = KO_ROUNDS.find(r=>r.key===key);
+  if(!round){ alert("Unknown round: "+key); return; }
+  if(!confirm("Simulate "+round.label+" (auto-populate teams, assign draw, simulate matches)?")) return;
+  update(s=>{
+    // Auto-populate this round's teams from previous results
+    autoPopulateKO(s);
+    // Assign draw for this round only
+    const teams=[];
+    s.koMatches[key].forEach(m=>{if(m.team1)teams.push(m.team1);if(m.team2)teams.push(m.team2);});
+    if(teams.length){
+      const shuffled=[...teams].sort(()=>Math.random()-0.5);
+      for(let pi=0;pi<8;pi++) s.koDraw[key][pi]=[];
+      shuffled.forEach((t,i)=>{ s.koDraw[key][i%8].push(t); });
+    }
+    // Simulate matches for this round
+    s.koMatches[key].forEach(m=>{
+      if(!m.team1||!m.team2) return;
+      let g1=randGoals(), g2=randGoals();
+      while(g1===g2){ g1=randGoals(); g2=randGoals(); }
+      m.goals1=String(g1); m.goals2=String(g2); m.played=true;
+    });
+    // Auto-populate next round with winners
+    autoPopulateKO(s);
+    s.activeTab="table";
+  });
+}
+
 function simClear(){
   if(!confirm("Clear all simulated data? Player names will be kept.")) return;
   const names=[...S.playerNames];
