@@ -1021,6 +1021,7 @@ function renderTable(){
     <th style="padding:6px 5px;font-weight:400">L</th>
     <th style="padding:6px 5px;font-weight:400">GD</th>
     <th style="padding:6px 5px;font-weight:400">GF</th>
+    <th style="padding:6px 5px;font-weight:400">GA</th>
     <th style="padding:6px 8px;font-weight:400">PTS</th>
   </tr></thead><tbody>`;
   const medals=["🥇","🥈","🥉","","","","",""];
@@ -1032,7 +1033,7 @@ function renderTable(){
     // Insert qualification line between last qualifier and first non-qualifier
     if(!isQ && !qualLineDone){
       qualLineDone=true;
-      h+=`<tr><td colspan="9" style="padding:0">
+      h+=`<tr><td colspan="10" style="padding:0">
         <div style="font-size:9px;color:#888;text-align:center;padding:3px;letter-spacing:1px;border-top:1px solid #333;border-bottom:1px solid #1a1a1a">── KO QUALIFICATION LINE ──</div>
       </td></tr>`;
     }
@@ -1051,6 +1052,7 @@ function renderTable(){
       <td style="text-align:center;padding:8px 5px;font-size:11px;color:#ddd">${r.lost}</td>
       <td style="text-align:center;padding:8px 5px;font-size:11px;color:${r.gd>0?"#2a9d8f":r.gd<0?"#e63946":"#aaa"}">${r.gd>0?"+":""}${r.gd}</td>
       <td style="text-align:center;padding:8px 5px;font-size:11px;color:#ddd">${r.gf}</td>
+      <td style="text-align:center;padding:8px 5px;font-size:11px;color:#ddd">${r.ga}</td>
       <td style="text-align:center;padding:8px 8px;font-size:14px;font-weight:700;color:${col}">${r.pts}</td>
     </tr>`;
   });
