@@ -1642,8 +1642,8 @@ function renderPlayers(){
     </div>`;
   });
 
-  h+=`
-  <div class="card mt16" style="border-color:#1a2a1a">
+  if(!S.locked){
+    h+=`<div class="card mt16" style="border-color:#1a2a1a">
     <div class="section-label" style="color:#2a9d8f;margin-bottom:12px">🎲 Simulate</div>
     <div style="font-size:11px;color:#888;margin-bottom:12px;line-height:1.6">
       Run simulated data to test the app or demo it to friends. Each step builds on the previous.
@@ -1687,8 +1687,8 @@ function renderPlayers(){
         Clear sim data (keep names)
       </button>
     </div>
-  </div>
-
+  </div>`}`;
+  }
   <div class="card mt10" style="border-color:#1a1a2a">
     <div class="section-label" style="color:#74b3ce">🔑 Admin Password</div>
     <div style="font-size:11px;color:#ccc;margin-bottom:10px">Password-protect the lock/unlock button. Only someone with the password can lock or unlock the app.</div>
