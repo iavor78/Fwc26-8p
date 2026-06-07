@@ -1,34 +1,33 @@
-# 🏆 Special Team League WC26 — 8 Player Edition
+# 🏆 Special Super League WC26 — 8 Player Edition
 
-A real-time fantasy league tracker for **8 players** following the FIFA World Cup 2026 (USA · Canada · Mexico).
+A real-time fantasy league for **8 players** following the FIFA World Cup 2026.
+**48 teams · 104 matches · USA · Canada · Mexico**
 
 ---
 
 ## 🎲 The Draw
 
-### Group Stage Draw
-There are 12 groups (A–L) with 4 teams each — all 48 WC teams. Each player is assigned **1 team from 6 different groups**, giving every player **6 teams total**.
-
-- 8 players × 6 teams = 48 teams (every team is owned)
-- Each group has exactly **4 players** assigned (one per team)
-- No player can have more than one team from the same group
+### Group Stage
+- 12 groups of 4 teams = 48 teams total
+- Each player is assigned **6 teams** from **6 different groups** (one team per group)
+- Every group has exactly **4 players** assigned (one per team)
+- 8 players × 6 teams = 48 teams — every team is owned by someone
 
 ### Knockout Draw
-A **fresh draw is held before each KO round** — group stage ownership does not carry over. Only the **top 4 players** from the group stage qualify for the KO rounds.
+A fresh draw before R32, R16 and QF. SF/3rd place/Final carry over from QF.
 
-| Round | Teams per qualifying player |
-|-------|---------------------------|
-| Round of 32 | 8 |
-| Round of 16 | 4 |
-| Quarter-Finals | 2 |
-| Semi-Finals | 1 |
-| 3rd Place & Final | 1 each |
+| Round | Teams per player | Total |
+|-------|-----------------|-------|
+| Round of 32 | 4 | 32 ✓ |
+| Round of 16 | 2 | 16 ✓ |
+| Quarter-Finals | 1 | 8 ✓ |
+| Semi-Finals | — | carry from QF |
+| 3rd Place & Final | — | carry from QF |
 
-**Draw rules:**
-- Only the top 4 group-stage players participate in KO draws
-- The same team cannot be assigned to two different players in the same round
-- A player cannot be assigned two teams that **play each other** in the same round
-- Final and 3rd Place are paired — a player assigned a team in one cannot be assigned in the other
+**Draw rules for KO rounds:**
+- All 8 players participate in R32, R16 and QF draws
+- No player can receive two teams that play each other in the same round
+- SF/3rd/Final: whoever owns the QF team that advanced keeps them — no new draw
 
 ---
 
@@ -41,31 +40,29 @@ A **fresh draw is held before each KO round** — group stage ownership does not
 | Draw | 1 |
 | Loss | 0 |
 
-Goal Difference and Goals For are tracked as tiebreakers.
+Tiebreaker: Goal Difference → Goals For
 
 ### Knockout Rounds
 | Result | Points |
 |--------|--------|
 | Win (Full Time) | 3 |
-| Loss (Full Time) | 0 |
+| Loss | 0 |
 | Win (Penalties) | 3 |
 | Loss (Penalties) | 0 |
 
-> **Penalties:** Full Time score used for Goal Difference. Pen winner gets 3pts. No draws in KO.
+> Penalties: FT score counts for GD. Pen winner gets 3pts. No draws in KO rounds.
 
 ---
 
-## 📊 League Table & KO Qualification
+## 📊 League Table
 
-The **Table** tab shows all 8 players ranked by total points. After the group stage, the **top 4 players** advance to the knockout rounds. A qualification line separates them from the bottom 4.
-
-Tiebreakers (in order): Points → Goal Difference → Goals For
+All 8 players ranked by total points across all rounds (group stage + all KO). No elimination from the table — everyone accumulates points throughout the tournament.
 
 ---
 
 ## 🏅 Best 3rd-Placed Teams
 
-In WC2026, the top 2 teams per group qualify automatically. The **8 best 3rd-placed teams** also qualify for the R32. The **Groups** tab shows live standings and which 3rd-placed teams are currently in the top 8.
+Top 2 from each group qualify automatically. The **8 best 3rd-placed teams** also advance to R32, ranked by pts/GD/GF. The **Groups** tab shows live 3rd-place standings.
 
 ---
 
@@ -73,41 +70,37 @@ In WC2026, the top 2 teams per group qualify automatically. The **8 best 3rd-pla
 
 | Tab | Description |
 |-----|-------------|
-| 🏆 Table | Overall standings for all 8 players with KO qualification line |
+| 🏆 Table | Full 8-player standings |
 | 📊 Groups | Live group standings A–L + best 3rd-place ranking |
-| 🔗 Bracket | Full KO bracket from R32 to Final |
-| 🎲 Draw | Group and KO team assignments per player |
-| ⚽ Matches | Enter match scores (group stage + all KO rounds) |
-| 👤 Players | Edit player names, simulate, reset data |
+| 🔗 Bracket | Full KO bracket R32 → Final |
+| 🎲 Draw | Group and KO draws (R32/R16/QF only) |
+| ⚽ Matches | Enter scores · 📅 calendar view |
+| 👤 Players | Names, simulate, reset |
 
 ### Real-Time Sync
-All data syncs instantly via Firebase. Everyone connected sees the same live state.
+Firebase Firestore — all changes sync instantly to all devices.
 
 ### Lock 🔒
-The admin can lock the app to prevent editing. When locked, the simulate and reset functions are hidden and password-protected. Tap the lock button (bottom right) to lock/unlock.
+Tap the lock button (appears on any tap, bottom-right) to password-protect editing. When locked, simulate and reset are hidden. Admin PIN required to lock/unlock.
 
-### Simulate
-The Players tab (admin only) includes step-by-step simulation:
-
-**Group stage:**
-1. Assign teams to players
-2. Simulate group phase results
-
-**KO rounds (R32 → Final) — per round:**
-- **Assign** — distributes teams to top 4 players (no same-match conflicts)
-- **Simulate** — fills in random results and advances the bracket
-- **Clear** — resets that round and all subsequent rounds
+### Simulate (admin only)
+Step-by-step simulation for testing:
+1. Assign teams to players (group draw)
+2. Simulate group phase
+3. Per KO round: **Assign** draw → **Simulate** results → **Clear** if needed
 
 ---
 
 ## 🗓️ Tournament
 
-- **Kick-off:** 11 June 2026
-- **Final:** 19 July 2026
-- **Host nations:** 🇺🇸 USA · 🇨🇦 Canada · 🇲🇽 Mexico
-- **Teams:** 48 nations across 12 groups
-- **Matches:** 104 total
+| | |
+|-|-|
+| Kick-off | 11 June 2026 |
+| Final | 19 July 2026 |
+| Hosts | 🇺🇸 USA · 🇨🇦 Canada · 🇲🇽 Mexico |
+| Teams | 48 |
+| Matches | 104 |
 
 ---
 
-*Built with vanilla JS + Firebase Firestore · Deployed on GitHub Pages*
+*Special Super League WC26 · Built with vanilla JS + Firebase · GitHub Pages*
