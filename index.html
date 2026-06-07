@@ -24,15 +24,15 @@
   ::-webkit-scrollbar-track{background:#0a0a0a}
   ::-webkit-scrollbar-thumb{background:#222;border-radius:2px}
   .tab-bar{display:flex;background:rgba(10,10,10,0.60);border-bottom:1px solid #151515;position:sticky;top:0;z-index:10;backdrop-filter:blur(12px)}
-  .tab-btn{flex:1;padding:10px 2px;border:none;background:transparent;cursor:pointer;font-size:11px;font-weight:700;border-bottom:2px solid transparent;color:#444;transition:color .2s,border-color .2s}
+  .tab-btn{flex:1;padding:10px 2px;border:none;background:transparent;cursor:pointer;font-size:11px;font-weight:700;border-bottom:2px solid transparent;color:#fff;transition:color .2s,border-color .2s}
   .tab-btn.active{color:#e63946;border-bottom-color:#e63946}
   .tab-icon{font-size:15px;margin-bottom:2px}
-  .section-label{font-size:10px;color:#444;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
+  .section-label{font-size:10px;color:#fff;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
   .card{background:rgba(12,12,12,0.92);border-radius:10px;padding:14px;border:1px solid #1e1e1e;margin-bottom:8px;backdrop-filter:blur(2px)}
   .card.done{border-color:#1a3a1a}
-  .pill-btn{padding:5px 12px;border-radius:20px;border:none;cursor:pointer;font-size:11px;font-weight:700;background:#1a1a1a;color:#666;transition:background .2s,color .2s}
+  .pill-btn{padding:5px 12px;border-radius:20px;border:none;cursor:pointer;font-size:11px;font-weight:700;background:#1a1a1a;color:#fff;transition:background .2s,color .2s}
   .pill-btn.active{background:#e63946;color:#fff}
-  .group-btn{width:34px;height:34px;border-radius:8px;border:2px solid #222;cursor:pointer;font-weight:700;font-size:12px;background:#0f0f0f;color:#555;transition:all .2s}
+  .group-btn{width:34px;height:34px;border-radius:8px;border:2px solid #222;cursor:pointer;font-weight:700;font-size:12px;background:#0f0f0f;color:#fff;transition:all .2s}
   .group-btn.active{border-color:#e63946;background:#1a0808;color:#e63946}
   .group-btn.done{border-color:#222;background:#0d2010;color:#2a9d8f}
   .score-input{width:42px;text-align:center;background:#1a1a1a;border:1px solid #444;color:#fff;padding:6px 0;border-radius:6px;font-size:16px;font-weight:700}
@@ -54,7 +54,7 @@
   .bracket-wrap{overflow-x:auto;padding-bottom:8px}
   .bracket{display:flex;gap:8px;min-width:max-content}
   .bracket-col{display:flex;flex-direction:column;min-width:148px}
-  .bracket-col-label{font-size:10px;color:#444;letter-spacing:1px;text-align:center;margin-bottom:4px;font-weight:700;text-transform:uppercase}
+  .bracket-col-label{font-size:10px;color:#333;letter-spacing:1px;text-align:center;margin-bottom:4px;font-weight:700;text-transform:uppercase}
   .bracket-match{background:#111;border-radius:6px;padding:7px 9px;border:1px solid #1a1a1a}
   .bracket-match-num{font-size:9px;color:#aaa;margin-bottom:4px;letter-spacing:.8px}
   .bracket-team{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
@@ -971,7 +971,7 @@ function getKOQualifiers(){
 
 function renderTable(){
   const rows=computeTable();
-  let h=`<div style="font-size:10px;color:#bbb;text-align:center;letter-spacing:1px;margin-bottom:14px">SPECIAL TEAM LEAGUE · 8 PLAYERS</div>`;
+  let h=`<div style="font-size:10px;color:#333;text-align:center;letter-spacing:1px;margin-bottom:14px">SPECIAL TEAM LEAGUE · 8 PLAYERS</div>`;
   h+=`<div class="card" style="padding:0;overflow:hidden"><table style="width:100%;border-collapse:collapse">`;
   h+=`<thead><tr style="font-size:9px;color:#888;letter-spacing:1px">
     <th style="text-align:left;padding:6px 12px;font-weight:400">#</th>
@@ -1008,7 +1008,7 @@ function renderTable(){
     </tr>`;
   });
   h+=`</tbody></table></div>`;
-  h+=`<div style="margin-top:14px;font-size:10px;color:#555;text-align:center;letter-spacing:1px">W=3 · D=1 · L=0</div>`;
+  h+=`<div style="margin-top:14px;font-size:10px;color:#333;text-align:center;letter-spacing:1px">W=3 · D=1 · L=0</div>`;
   return h;
 }
 
@@ -1191,7 +1191,7 @@ function renderBracket(){
   const LEFT_R32_PAIRS  = [[74,77],[73,75],[76,78],[79,80]];
   const RIGHT_R32_PAIRS = [[83,84],[81,82],[86,88],[85,87]];
 
-  let h = `<div class="section-label mb8">KO Bracket <span style="font-size:10px;color:#444">← scroll →</span></div>`;
+  let h = `<div class="section-label mb8">KO Bracket <span style="font-size:10px;color:#333">← scroll →</span></div>`;
   h += `<div class="bracket-wrap">`;
   h += `<div style="display:inline-flex;align-items:stretch;gap:0;position:relative">`;
 
@@ -2269,7 +2269,7 @@ function drawCalendar(){
   if(!el) return;
   var byDate=buildDateMap();
   var html='<div style="background:#111;border:1px solid #222;border-radius:10px;padding:12px;margin-bottom:12px">';
-  html+='<div style="font-size:9px;color:#555;letter-spacing:1px;text-align:center;margin-bottom:10px">TAP A DATE TO SEE MATCHES</div>';
+  html+='<div style="font-size:11px;color:#eee;letter-spacing:1px;text-align:center;margin-bottom:10px">TAP A DATE TO SEE MATCHES</div>';
   html+='<div style="display:flex;gap:12px;flex-wrap:wrap">';
   [{y:2026,m:5,n:'JUNE'},{y:2026,m:6,n:'JULY'}].forEach(function(mo){
     html+='<div style="flex:1;min-width:130px">';
