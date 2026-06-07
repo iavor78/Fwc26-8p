@@ -1499,16 +1499,6 @@ function renderKODraw(phase){
 }
 
 // ── MATCHES ───────────────────────────────────────────────────────────────────
-function toggleCalendar(btn){
-  var el=document.getElementById("matchCalendar");
-  if(!el) return;
-  if(el.style.display==="none"||!el.style.display){
-    el.style.display="block";
-    el.innerHTML=buildCalendarHTML();
-  } else {
-    el.style.display="none";
-  }
-}
 
 function buildCalendarHTML(){
   var byDate={};
@@ -1936,71 +1926,53 @@ function simKORounds(){
     });
   });
 }
+
 function simKOAssign(key){
   if(!requireAdmin()) return;
+  if(key==="sf"||key==="third"||key==="final"){
+    alert("No draw for this round — teams carry over from QF.");
+    return;
+  }
   update(s=>{
     autoPopulateKO(s);
-    const qualifiers=getKOQualifiers();
-    const koPlayers=qualifiers.length>=4?qualifiers:[0,1,2,3];
+    const round=KO_ROUNDS.find(r=>r.key===key);
+    const slotsPerPlayer=round?round.slots:1;
+    const allPlayers=[0,1,2,3,4,5,6,7];
 
-    // Build match opponent map: team -> opponent in this round
     const opponentOf={};
     s.koMatches[key].forEach(m=>{
-      if(m.team1&&m.team2){
-        opponentOf[m.team1]=m.team2;
-        opponentOf[m.team2]=m.team1;
-      }
+      if(m.team1&&m.team2){opponentOf[m.team1]=m.team2;opponentOf[m.team2]=m.team1;}
     });
 
     const teams=[];
     s.koMatches[key].forEach(m=>{if(m.team1)teams.push(m.team1);if(m.team2)teams.push(m.team2);});
-    if(!teams.length){ alert("No teams available yet for this round."); return; }
+    if(!teams.length){alert("No teams available yet for this round.");return;}
 
-    // Shuffle teams
-    const shuffled=[...teams].sort(()=>Math.random()-0.5);
-
-    // Clear draw
     for(let pi=0;pi<8;pi++) s.koDraw[key][pi]=[];
 
-    // Assign with conflict check: no player gets both teams of the same match
-    // Use backtracking-lite: try to assign each team to a player, retry on conflict
-    const assigned={}; // team -> playerIndex
-    let attempts=0;
-    const maxAttempts=200;
-
-    while(Object.keys(assigned).length<shuffled.length && attempts<maxAttempts){
-      attempts++;
-      // Reset and retry
-      Object.keys(assigned).forEach(t=>delete assigned[t]);
+    for(let attempt=0;attempt<300;attempt++){
+      const order=[...teams].sort(()=>Math.random()-0.5);
+      const assigned={};
       for(let pi=0;pi<8;pi++) s.koDraw[key][pi]=[];
-
-      const order=[...shuffled].sort(()=>Math.random()-0.5);
       let valid=true;
 
       for(const team of order){
-        // Find eligible players: in koPlayers, no conflict with already-assigned opponent
         const opp=opponentOf[team];
         const oppOwner=opp&&assigned[opp]!==undefined?assigned[opp]:-1;
-        // Count how many teams each player already has
         const counts={};
-        koPlayers.forEach(pi=>{ counts[pi]=(s.koDraw[key][pi]||[]).length; });
-        const eligible=koPlayers.filter(pi=>pi!==oppOwner);
-        if(eligible.length===0){ valid=false; break; }
-        // Pick player with fewest teams (most balanced), break ties randomly
+        allPlayers.forEach(pi=>{counts[pi]=(s.koDraw[key][pi]||[]).length;});
+        const eligible=allPlayers.filter(pi=>pi!==oppOwner&&counts[pi]<slotsPerPlayer);
+        if(!eligible.length){valid=false;break;}
         eligible.sort((a,b)=>counts[a]-counts[b]);
         const minCount=counts[eligible[0]];
         const tied=eligible.filter(pi=>counts[pi]===minCount);
         const pi=tied[Math.floor(Math.random()*tied.length)];
         assigned[team]=pi;
-        if(!s.koDraw[key][pi]) s.koDraw[key][pi]=[];
         s.koDraw[key][pi].push(team);
       }
 
-      if(valid && Object.keys(assigned).length===shuffled.length) break;
-    }
-
-    if(Object.keys(assigned).length<shuffled.length){
-      alert("Could not assign without conflicts after "+maxAttempts+" attempts. Try again.");
+      if(valid&&Object.keys(assigned).length===teams.length) break;
+      if(attempt===299) alert("Could not assign without conflicts. Try again.");
     }
   });
 }
