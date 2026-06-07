@@ -1226,6 +1226,19 @@ function renderBracket(){
 }
 
 // ── DRAW ──────────────────────────────────────────────────────────────────────
+function renderKO(){
+  var phase=S.activeKOPhase||"r32";
+  if(phase==="group") return renderGroupDraw();
+  if(phase==="sf"||phase==="third"||phase==="final"){
+    var r=KO_ROUNDS.find(function(x){return x.key===phase;});
+    return '<div class="card" style="text-align:center;padding:20px">'
+      +'<div style="font-size:14px;color:#aaa;margin-bottom:8px">'+(r?r.label:phase)+'</div>'
+      +'<div style="font-size:12px;color:#666;line-height:1.6">No draw for this round.<br>Teams carry over from QF assignment.</div>'
+      +'</div>';
+  }
+  return renderKODraw(phase);
+}
+
 function renderDraw(){
   const drawPhases=[
     {key:"group",label:"Groups"},
