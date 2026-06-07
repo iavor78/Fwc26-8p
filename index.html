@@ -1227,13 +1227,16 @@ function renderBracket(){
 
 // ── DRAW ──────────────────────────────────────────────────────────────────────
 function renderDraw(){
-  const phases=[{key:"group",label:"Groups"},...KO_ROUNDS.map(r=>({key:r.key,label:r.label.replace("Round of ","R").replace("-Finals","F")}))];
+  const drawPhases=[
+    {key:"group",label:"Groups"},
+    {key:"r32",label:"R32"},
+    {key:"r16",label:"R16"},
+    {key:"qf",label:"QF"},
+  ];
   let h=`<div class="flex gap6 flex-wrap mb14">`;
-  phases.forEach(p=>h+=`<button class="pill-btn ${S.activeKOPhase===p.key||(!S.activeKOPhase&&p.key==='group')?'active':''}" onclick="update(s=>{s.activeKOPhase='${p.key}'})">${p.label}</button>`);
-  const phase=S.activeKOPhase||"group";
+  drawPhases.forEach(p=>h+=`<button class="pill-btn ${S.activeKOPhase===p.key||(!S.activeKOPhase&&p.key==="group")?'active':''}" onclick="update(s=>{s.activeKOPhase='${p.key}'})">${p.label}</button>`);
   h+=`</div>`;
-  if(phase==="group") h+=renderGroupDraw();
-  else h+=renderKODraw(phase);
+  h+=renderKO();
   return h;
 }
 
@@ -1465,12 +1468,119 @@ function renderKODraw(phase){
 }
 
 // ── MATCHES ───────────────────────────────────────────────────────────────────
+function toggleCalendar(btn){
+  var el=document.getElementById("matchCalendar");
+  if(!el) return;
+  if(el.style.display==="none"||!el.style.display){
+    el.style.display="block";
+    el.innerHTML=buildCalendarHTML();
+  } else {
+    el.style.display="none";
+  }
+}
+
+function buildCalendarHTML(){
+  var byDate={};
+  function add(mn,ds,home,away,played,s1,s2,city,time){
+    if(!byDate[ds]) byDate[ds]=[];
+    byDate[ds].push({mn:mn,home:home,away:away,played:played,s1:s1,s2:s2,city:city,time:time});
+  }
+  GROUP_KEYS.forEach(function(g){
+    S.groupMatches[g].forEach(function(m){
+      var info=getMatchInfo(m.matchNum);
+      if(!info) return;
+      add(m.matchNum,info.dateStr,GROUPS[g][m.home],GROUPS[g][m.away],m.played,m.homeGoals,m.awayGoals,info.city,info.timeStr);
+    });
+  });
+  KO_ROUNDS.forEach(function(r){
+    S.koMatches[r.key].forEach(function(m){
+      var info=getMatchInfo(m.matchNum);
+      if(!info) return;
+      var h=m.team1||(R32_PATHS.find(function(p){return p[0]===m.matchNum;})?("Grp "+(R32_PATHS.find(function(p){return p[0]===m.matchNum;})||[])[1]):"TBD");
+      var a=m.team2||(R32_PATHS.find(function(p){return p[0]===m.matchNum;})?("Grp "+(R32_PATHS.find(function(p){return p[0]===m.matchNum;})||[])[2]):"TBD");
+      add(m.matchNum,info.dateStr,h,a,m.played,m.goals1,m.goals2,info.city,info.timeStr);
+    });
+  });
+  var months=[{y:2026,m:5,name:"June"},{y:2026,m:6,name:"July"}];
+  var dh=["M","T","W","T","F","S","S"];
+  var html='<div style="background:#111;border:1px solid #222;border-radius:10px;padding:14px;margin-bottom:14px">';
+  html+='<div style="font-size:10px;color:#555;letter-spacing:1px;text-align:center;margin-bottom:12px">MATCH CALENDAR — tap a date to see matches</div>';
+  html+='<div style="display:flex;gap:16px;flex-wrap:wrap">';
+  months.forEach(function(mo){
+    html+='<div style="flex:1;min-width:150px">';
+    html+='<div style="font-size:11px;color:#aaa;font-weight:700;text-align:center;margin-bottom:8px;letter-spacing:1px">'+mo.name.toUpperCase()+'</div>';
+    html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center">';
+    dh.forEach(function(d){html+='<div style="font-size:9px;color:#444;padding-bottom:3px">'+d+'</div>';});
+    var fd=(new Date(mo.y,mo.m,1).getDay()+6)%7;
+    var dim=new Date(mo.y,mo.m+1,0).getDate();
+    for(var i=0;i<fd;i++) html+='<div></div>';
+    for(var d=1;d<=dim;d++){
+      var mm=String(mo.m+1).padStart(2,"0");
+      var dd=String(d).padStart(2,"0");
+      var ds=mo.y+"-"+mm+"-"+dd;
+      var mx=byDate[ds]||[];
+      var has=mx.length>0;
+      var done=has&&mx.every(function(m){return m.played;});
+      var bg=has?(done?"#1a2a1a":"#1a1a2a"):"transparent";
+      var col=has?(done?"#2a9d8f":"#74b3ce"):"#333";
+      var bdr=has?"1px solid "+(done?"#2a3a2a":"#2a2a3a"):"1px solid transparent";
+      var clickAttr=has?' onclick="showCalDay(\''+ds+'\')">':'>';
+      html+='<div style="font-size:10px;padding:3px 1px;border-radius:4px;background:'+bg+';color:'+col+';border:'+bdr+';cursor:'+(has?"pointer":"default")+'"'+clickAttr+d+'</div>';
+    }
+    html+='</div></div>';
+  });
+  html+='</div><div id="calDay" style="display:none;margin-top:10px;border-top:1px solid #1a1a1a;padding-top:10px"></div></div>';
+  return html;
+}
+
+function showCalDay(ds){
+  var byDate={};
+  function add(mn,d2,home,away,played,s1,s2,city,time){
+    if(d2!==ds) return;
+    if(!byDate[ds]) byDate[ds]=[];
+    byDate[ds].push({mn:mn,home:home,away:away,played:played,s1:s1,s2:s2,city:city,time:time});
+  }
+  GROUP_KEYS.forEach(function(g){
+    S.groupMatches[g].forEach(function(m){
+      var info=getMatchInfo(m.matchNum);
+      if(info) add(m.matchNum,info.dateStr,GROUPS[g][m.home],GROUPS[g][m.away],m.played,m.homeGoals,m.awayGoals,info.city,info.timeStr);
+    });
+  });
+  KO_ROUNDS.forEach(function(r){
+    S.koMatches[r.key].forEach(function(m){
+      var info=getMatchInfo(m.matchNum);
+      if(!info) return;
+      add(m.matchNum,info.dateStr,m.team1||"TBD",m.team2||"TBD",m.played,m.goals1,m.goals2,info.city,info.timeStr);
+    });
+  });
+  var el=document.getElementById("calDay");
+  if(!el) return;
+  var mx=(byDate[ds]||[]).sort(function(a,b){return a.mn-b.mn;});
+  var dt=new Date(ds+"T12:00:00");
+  var lbl=dt.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
+  var html='<div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">'+lbl+' &mdash; '+mx.length+' match'+(mx.length!==1?'es':'')+'</div>';
+  mx.forEach(function(m){
+    var score=m.played?(' <b style="color:#eee">'+m.s1+'&ndash;'+m.s2+'</b>'):" vs";
+    html+='<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-top:1px solid #1a1a1a">'
+      +'<span style="font-size:9px;color:#444;width:28px">M'+m.mn+'</span>'
+      +'<span style="font-size:10px;color:#555;width:40px">'+m.time+'</span>'
+      +'<span style="flex:1;font-size:11px;color:#ddd;text-align:right">'+esc(m.home)+'</span>'
+      +'<span style="font-size:11px;color:#555;padding:0 4px">'+score+'</span>'
+      +'<span style="flex:1;font-size:11px;color:#ddd">'+esc(m.away)+'</span>'
+      +'<span style="font-size:9px;color:#444;width:70px;text-align:right">'+esc(m.city)+'</span>'
+      +'</div>';
+  });
+  el.innerHTML=html;
+  el.style.display="block";
+}
+
 function renderMatches(){
   const phase=S.activeMatchPhase||"group";
   const phases=[{key:"group",label:"Groups"},...KO_ROUNDS.map(r=>({key:r.key,label:r.label.replace("Round of ","R").replace("-Finals","F")}))];
-  let h=`<div class="flex gap6 flex-wrap mb14">`;
+  let h=`<div class="flex items-center gap6 mb14" style="flex-wrap:wrap">`;
   phases.forEach(p=>h+=`<button class="pill-btn ${phase===p.key?'active':''}" onclick="update(s=>{s.activeMatchPhase='${p.key}'})">${p.label}</button>`);
-  h+=`</div>`;
+  h+=`<button onclick="toggleCalendar(this)" style="margin-left:auto;background:#1a1a2a;border:1px solid #2a2a3a;color:#74b3ce;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;flex-shrink:0">📅</button></div>`;
+  h+=`<div id="matchCalendar" style="display:none"></div>`;
   if(phase==="group") h+=renderGroupMatches();
   else h+=renderKOMatches(phase);
   return h;
@@ -1641,18 +1751,16 @@ function renderPlayers(){
     {key:'third',label:'3rd'},
     {key:'final',label:'Final'},
   ];
-  koRoundDefs.forEach(({key,label},i)=>{
+  koRoundDefs.forEach(function({key,label},i){
+    var late=key==="sf"||key==="third"||key==="final";
+    var assignBtn=late?"":('<button style="flex:1;background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;padding:6px 4px;border-radius:6px;font-size:11px;cursor:pointer" onclick="simKOAssign(\''+key+'\')" >Assign</button>');
     h+=`<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
       <span style="font-size:11px;color:#888;width:36px;flex-shrink:0">${label}</span>
-      <button style="flex:1;background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;padding:6px 4px;border-radius:6px;font-size:11px;cursor:pointer"
-        onclick="simKOAssign('${key}')">Assign</button>
-      <button style="flex:1;background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;padding:6px 4px;border-radius:6px;font-size:11px;cursor:pointer"
-        onclick="simKOMatches('${key}')">Simulate</button>
-      <button style="flex:1;background:#1a1200;border:1px solid #2a2200;color:#888;padding:6px 4px;border-radius:6px;font-size:11px;cursor:pointer"
-        onclick="simKOClear('${key}')">Clear</button>
+      ${assignBtn}
+      <button style="flex:1;background:#0d1a12;border:1px solid #1a3a22;color:#2a9d8f;padding:6px 4px;border-radius:6px;font-size:11px;cursor:pointer" onclick="simKOMatches('${key}')">Simulate</button>
+      <button style="flex:1;background:#1a1200;border:1px solid #2a2200;color:#888;padding:6px 4px;border-radius:6px;font-size:11px;cursor:pointer" onclick="simKOClear('${key}')">Clear</button>
     </div>`;
-  });
-  h+=`<div style="height:4px"></div
+  });  h+=`<div style="height:4px"></div
       <div style="border-top:1px solid #1a1a1a;margin:4px 0"></div>
       <button class="action-btn" style="background:#1a1200;border:1px solid #2a2200;color:#888;margin:0"
         onclick="simClear()">
