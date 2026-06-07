@@ -54,7 +54,7 @@
   .bracket-wrap{overflow-x:auto;padding-bottom:8px}
   .bracket{display:flex;gap:8px;min-width:max-content}
   .bracket-col{display:flex;flex-direction:column;min-width:148px}
-  .bracket-col-label{font-size:10px;color:#333;letter-spacing:1px;text-align:center;margin-bottom:4px;font-weight:700;text-transform:uppercase}
+  .bracket-col-label{font-size:10px;color:#222;letter-spacing:1px;text-align:center;margin-bottom:4px;font-weight:700;text-transform:uppercase}
   .bracket-match{background:#111;border-radius:6px;padding:7px 9px;border:1px solid #1a1a1a}
   .bracket-match-num{font-size:9px;color:#aaa;margin-bottom:4px;letter-spacing:.8px}
   .bracket-team{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
@@ -934,7 +934,7 @@ function renderGroups(){
     }
   }
   h += `</div>`;
-  h += `<div style="margin-top:20px;font-size:10px;color:#888;text-align:center;letter-spacing:1px">✓R32 = qualified · ✓3rd = best third · W=3 · D=1 · L=0</div>`;
+  h += `<div style="margin-top:20px;font-size:10px;color:#222;text-align:center;letter-spacing:1px">✓R32 = qualified · ✓3rd = best third · W=3 · D=1 · L=0</div>`;
   return h;
 }
 
@@ -971,7 +971,7 @@ function getKOQualifiers(){
 
 function renderTable(){
   const rows=computeTable();
-  let h=`<div style="font-size:10px;color:#333;text-align:center;letter-spacing:1px;margin-bottom:14px">SPECIAL SUPER LEAGUE · 8 PLAYERS · 48 TEAMS · 104 MATCHES</div>`;
+  let h=`<div style="font-size:10px;color:#222;text-align:center;letter-spacing:1px;margin-bottom:14px">SPECIAL SUPER LEAGUE · 8 PLAYERS · 48 TEAMS · 104 MATCHES</div>`;
   h+=`<div class="card" style="padding:0;overflow:hidden"><table style="width:100%;border-collapse:collapse">`;
   h+=`<thead><tr style="font-size:9px;color:#888;letter-spacing:1px">
     <th style="text-align:left;padding:6px 12px;font-weight:400">#</th>
@@ -1008,7 +1008,7 @@ function renderTable(){
     </tr>`;
   });
   h+=`</tbody></table></div>`;
-  h+=`<div style="margin-top:14px;font-size:10px;color:#333;text-align:center;letter-spacing:1px">W=3 · D=1 · L=0</div>`;
+  h+=`<div style="margin-top:14px;font-size:10px;color:#222;text-align:center;letter-spacing:1px">W=3 · D=1 · L=0</div>`;
   return h;
 }
 
@@ -1263,6 +1263,9 @@ function renderDraw(){
     {key:"r32",label:"R32"},
     {key:"r16",label:"R16"},
     {key:"qf",label:"QF"},
+    {key:"sf",label:"SF"},
+    {key:"third",label:"3rd"},
+    {key:"final",label:"Final"},
   ];
   let h=`<div class="flex gap6 flex-wrap mb14">`;
   drawPhases.forEach(p=>h+=`<button class="pill-btn ${S.activeKOPhase===p.key||(!S.activeKOPhase&&p.key==="group")?'active':''}" onclick="update(s=>{s.activeKOPhase='${p.key}'})">${p.label}</button>`);
@@ -1404,7 +1407,7 @@ function renderKODraw(phase){
   const allFilled=autoTeams.length>0;
   const _asgn=S.koDraw[phase].reduce((t,a)=>t+(a||[]).filter(Boolean).length,0);
   const _tot=S.koMatches[phase].reduce((t,m)=>{if(m.team1)t++;if(m.team2)t++;return t;},0);
-  let h=`<div class="section-label">${round.label} — ${n} team${n>1?"s":""} per player <span style="font-size:10px;color:#555">(${_asgn}/${_tot})</span></div>`;
+  let h=`<div class="section-label">${round.label} — ${n} team${n>1?"s":""} per player <span style="font-size:10px;color:#fff">(${_asgn}/${_tot})</span></div>`;
   if(allFilled){
     h+=`<div style="background:#0a1a0a;border:1px solid #1a2a1a;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:#2a9d8f">
       ✓ Teams auto-filled from results. Assign each team to a player below.
