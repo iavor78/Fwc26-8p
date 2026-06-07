@@ -330,9 +330,9 @@ function getMatchInfo(matchNum) {
 
 const PLAYER_COLORS=["#e63946","#2a9d8f","#e9c46a","#a78bfa","#f4a261","#57cc99","#74b3ce","#c77dff"];
 const KO_ROUNDS=[
-  {key:"r32",  label:"Round of 32",     slots:8, matchNums:[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88]},
-  {key:"r16",  label:"Round of 16",     slots:4, matchNums:[89,90,91,92,93,94,95,96]},
-  {key:"qf",   label:"Quarter-Finals",  slots:2, matchNums:[97,98,99,100]},
+  {key:"r32",  label:"Round of 32",     slots:4, matchNums:[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88]},
+  {key:"r16",  label:"Round of 16",     slots:2, matchNums:[89,90,91,92,93,94,95,96]},
+  {key:"qf",   label:"Quarter-Finals",  slots:1, matchNums:[97,98,99,100]},
   {key:"sf",   label:"Semi-Finals",     slots:1, matchNums:[101,102]},
   {key:"third",label:"3rd Place",       slots:1, matchNums:[103]},
   {key:"final",label:"Final",           slots:1, matchNums:[104]},
@@ -1231,14 +1231,32 @@ function renderKO(){
   if(phase==="group") return renderGroupDraw();
   if(phase==="sf"||phase==="third"||phase==="final"){
     var r=KO_ROUNDS.find(function(x){return x.key===phase;});
-    return '<div class="card" style="text-align:center;padding:20px">'
-      +'<div style="font-size:14px;color:#aaa;margin-bottom:8px">'+(r?r.label:phase)+'</div>'
-      +'<div style="font-size:12px;color:#666;line-height:1.6">No draw for this round.<br>Teams carry over from QF assignment.</div>'
-      +'</div>';
+    var label=r?r.label:phase;
+    // Show who is still in based on QF results
+    var html='<div class="card" style="text-align:center;padding:16px">'
+      +'<div style="font-size:13px;color:#eee;margin-bottom:8px">'+label+'</div>'
+      +'<div style="font-size:12px;color:#aaa;margin-bottom:16px">Teams carry over from QF draw</div>';
+    // Show each player and their QF team + if still alive
+    html+='<div style="text-align:left">';
+    S.playerNames.forEach(function(name,pi){
+      var qfTeams=(S.koDraw['qf'][pi]||[]).filter(Boolean);
+      if(!qfTeams.length) return;
+      // Check if any QF team won (is in SF koMatches teams)
+      var sfTeams=S.koMatches['sf'].reduce(function(t,m){if(m.team1)t.push(m.team1);if(m.team2)t.push(m.team2);return t;},[]);
+      var alive=qfTeams.some(function(t){return sfTeams.includes(t);});
+      var team=qfTeams[0];
+      html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #1a1a1a">'
+        +'<span class="player-dot" style="background:'+PLAYER_COLORS[pi]+'"></span>'
+        +'<span style="font-size:12px;font-weight:700;color:'+PLAYER_COLORS[pi]+';width:80px">'+esc(name)+'</span>'
+        +(team?flag(team)+' <span style="font-size:11px;color:#ddd">'+esc(team)+'</span>':'')
+        +'<span style="margin-left:auto;font-size:11px;color:'+(alive?'#2a9d8f':'#e63946')+'">'+(alive?'✓ active':'✗ eliminated')+'</span>'
+        +'</div>';
+    });
+    html+='</div></div>';
+    return html;
   }
   return renderKODraw(phase);
 }
-
 function renderDraw(){
   const drawPhases=[
     {key:"group",label:"Groups"},
@@ -1263,7 +1281,7 @@ function renderTeamPanel(teams, cols){
     columns.push(sorted.slice(i*perCol, (i+1)*perCol));
   }
   let h=`<div style="margin-top:18px;border-top:1px solid #1a1a1a;padding-top:14px">`;
-  h+=`<div style="font-size:9px;color:#555;letter-spacing:1px;margin-bottom:10px;text-align:center">TEAM OVERVIEW · sorted by FIFA ranking · greyed out when assigned</div>`;
+  h+=`<div style="font-size:11px;color:#eee;letter-spacing:1px;margin-bottom:10px;text-align:center">TEAM OVERVIEW · sorted by FIFA ranking · greyed out when assigned</div>`;
   h+=`<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:6px">`;
   columns.forEach(col=>{
     h+=`<div style="display:flex;flex-direction:column;gap:3px">`;
@@ -1276,7 +1294,7 @@ function renderTeamPanel(teams, cols){
       h+=`<div style="display:flex;align-items:center;gap:4px;padding:3px 5px;border-radius:4px;background:#111;${opacity}">
         ${flag(t)}
         <span style="font-size:10px;color:${col2};flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t)}</span>
-        <span style="font-size:9px;color:#333">#${rank(t)}</span>
+        <span style="font-size:10px;color:#888">#${rank(t)}</span>
       </div>`;
     });
     h+=`</div>`;
@@ -1299,7 +1317,7 @@ function renderKOTeamPanel(phase){
   const columns=[];
   for(let i=0;i<cols;i++) columns.push(sorted.slice(i*perCol,(i+1)*perCol));
   let h=`<div style="margin-top:18px;border-top:1px solid #1a1a1a;padding-top:14px">`;
-  h+=`<div style="font-size:9px;color:#555;letter-spacing:1px;margin-bottom:10px;text-align:center">${round.label.toUpperCase()} TEAMS · sorted by FIFA ranking · greyed out when assigned</div>`;
+  h+=`<div style="font-size:11px;color:#eee;letter-spacing:1px;margin-bottom:10px;text-align:center">${round.label.toUpperCase()} TEAMS · sorted by FIFA ranking · greyed out when assigned</div>`;
   h+=`<div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:6px">`;
   columns.forEach(col=>{
     h+=`<div style="display:flex;flex-direction:column;gap:3px">`;
@@ -1315,7 +1333,7 @@ function renderKOTeamPanel(phase){
       h+=`<div style="display:flex;align-items:center;gap:4px;padding:3px 5px;border-radius:4px;background:#111;${op}">
         ${flag(t)}
         <span style="font-size:10px;color:${teamCol};flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t)}</span>
-        <span style="font-size:9px;color:#333">#${rank(t)}</span>
+        <span style="font-size:10px;color:#888">#${rank(t)}</span>
       </div>`;
     });
     h+=`</div>`;
@@ -1592,7 +1610,7 @@ function renderMatches(){
   const phases=[{key:"group",label:"Groups"},...KO_ROUNDS.map(r=>({key:r.key,label:r.label.replace("Round of ","R").replace("-Finals","F")}))];
   let h=`<div class="flex items-center gap6 mb14" style="flex-wrap:wrap">`;
   phases.forEach(p=>h+=`<button class="pill-btn ${phase===p.key?'active':''}" onclick="update(s=>{s.activeMatchPhase='${p.key}'})">${p.label}</button>`);
-  h+=`<button onclick="toggleCalendar(this)" style="margin-left:auto;background:#1a1a2a;border:1px solid #2a2a3a;color:#74b3ce;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;flex-shrink:0">📅</button></div>`;
+  h+=`<button onclick="toggleCalendar()" style="margin-left:auto;background:#1a1a2a;border:1px solid #2a2a3a;color:#74b3ce;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;flex-shrink:0">📅</button></div>`;
   h+=`<div id="matchCalendar" style="display:none"></div>`;
   if(phase==="group") h+=renderGroupMatches();
   else h+=renderKOMatches(phase);
