@@ -1484,12 +1484,155 @@ function renderKODraw(phase){
 }
 
 // ── MATCHES ───────────────────────────────────────────────────────────────────
+function toggleCalendar(){
+  const el = document.getElementById('matchCalendar');
+  if(!el) return;
+  if(el.style.display==='none'||el.style.display===''){
+    el.style.display='block';
+    el.innerHTML = renderCalendarHTML();
+  } else {
+    el.style.display='none';
+  }
+}
+
+function renderCalendarHTML(){
+  // Build a map: dateStr -> [{matchNum, teams, time, group}]
+  const byDate = {};
+  function addMatch(mn, dateStr, label, city){
+    if(!byDate[dateStr]) byDate[dateStr]=[];
+    byDate[dateStr].push({mn, label, city});
+  }
+
+  // Group matches
+  GROUP_KEYS.forEach(g=>{
+    S.groupMatches[g].forEach(m=>{
+      const info=getMatchInfo(m.matchNum);
+      if(!info) return;
+      const hTeam=GROUPS[g][m.home], aTeam=GROUPS[g][m.away];
+      const played=m.played?` (${m.homeGoals}-${m.awayGoals})`:"";
+      addMatch(m.matchNum, info.dateStr, `${hTeam} v ${aTeam}${played}`, info.city);
+    });
+  });
+  // KO matches
+  KO_ROUNDS.forEach(r=>{
+    S.koMatches[r.key].forEach(m=>{
+      const info=getMatchInfo(m.matchNum);
+      if(!info) return;
+      const t1=m.team1||koSlotLabel(m.matchNum,0);
+      const t2=m.team2||koSlotLabel(m.matchNum,1);
+      const played=m.played?` (${m.goals1}-${m.goals2})`:"";
+      addMatch(m.matchNum, info.dateStr, `${t1} v ${t2}${played}`, info.city);
+    });
+  });
+
+  // Render June + July 2026
+  const months = [
+    {year:2026, month:5, name:"June"},   // month 5 = June (0-indexed)
+    {year:2026, month:6, name:"July"},
+  ];
+
+  let html = `<div style="background:#111;border:1px solid #222;border-radius:10px;padding:14px;margin-bottom:14px">`;
+  html += `<div style="font-size:10px;color:#555;letter-spacing:1px;margin-bottom:12px;text-align:center">MATCH CALENDAR · hover or tap a date</div>`;
+  html += `<div style="display:flex;gap:16px;flex-wrap:wrap">`;
+
+  months.forEach(({year,month,name})=>{
+    html += `<div style="flex:1;min-width:140px">`;
+    html += `<div style="font-size:11px;color:#aaa;font-weight:700;text-align:center;margin-bottom:8px;letter-spacing:1px">${name.toUpperCase()}</div>`;
+    html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center">`;
+    // Day headers
+    ['M','T','W','T','F','S','S'].forEach(d=>html+=`<div style="font-size:9px;color:#444;padding:2px">${d}</div>`);
+    
+    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+    // Adjust to Mon-first
+    const offset = (firstDay+6)%7;
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    
+    // Empty cells
+    for(let i=0;i<offset;i++) html+=`<div></div>`;
+    
+    for(let d=1;d<=daysInMonth;d++){
+      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const matches = byDate[dateStr]||[];
+      const hasMatches = matches.length>0;
+      const allPlayed = matches.length>0 && matches.every(m=>m.label.includes('('));
+      
+      const bg = hasMatches ? (allPlayed?'#1a2a1a':'#1a1a2a') : 'transparent';
+      const col = hasMatches ? (allPlayed?'#2a9d8f':'#74b3ce') : '#333';
+      const border = hasMatches ? `1px solid ${allPlayed?'#2a3a2a':'#2a2a3a'}` : '1px solid transparent';
+      
+      // Tooltip content
+      const tooltip = matches.map(m=>`M${m.mn}: ${m.label} · ${m.city}`).join('&#10;');
+      
+      html += `<div 
+        style="font-size:10px;padding:3px 1px;border-radius:4px;background:${bg};color:${col};border:${border};cursor:${hasMatches?'pointer':'default'};position:relative"
+        ${hasMatches?`onclick="showDayMatches('${dateStr}')" title="${tooltip}"`:''}
+      >${d}</div>`;
+    }
+    html += `</div></div>`;
+  });
+
+  html += `</div>`;
+  html += `<div id="calDayDetail" style="display:none;margin-top:10px;border-top:1px solid #1a1a1a;padding-top:10px"></div>`;
+  html += `</div>`;
+  return html;
+}
+
+function showDayMatches(dateStr){
+  // Re-render the popup detail section
+  const el = document.getElementById('calDayDetail');
+  if(!el) return;
+
+  const byDate = {};
+  GROUP_KEYS.forEach(g=>{
+    S.groupMatches[g].forEach(m=>{
+      const info=getMatchInfo(m.matchNum);
+      if(!info||info.dateStr!==dateStr) return;
+      if(!byDate[dateStr]) byDate[dateStr]=[];
+      const hTeam=GROUPS[g][m.home],aTeam=GROUPS[g][m.away];
+      byDate[dateStr].push({mn:m.matchNum,home:hTeam,away:aTeam,played:m.played,s1:m.homeGoals,s2:m.awayGoals,city:info.city,time:info.timeStr,group:g});
+    });
+  });
+  KO_ROUNDS.forEach(r=>{
+    S.koMatches[r.key].forEach(m=>{
+      const info=getMatchInfo(m.matchNum);
+      if(!info||info.dateStr!==dateStr) return;
+      if(!byDate[dateStr]) byDate[dateStr]=[];
+      const t1=m.team1||koSlotLabel(m.matchNum,0);
+      const t2=m.team2||koSlotLabel(m.matchNum,1);
+      byDate[dateStr].push({mn:m.matchNum,home:t1,away:t2,played:m.played,s1:m.goals1,s2:m.goals2,city:info.city,time:info.timeStr,group:r.label});
+    });
+  });
+
+  const matches = byDate[dateStr]||[];
+  const d = new Date(dateStr+'T12:00:00');
+  const label = d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+
+  let html = `<div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">${label} — ${matches.length} match${matches.length!==1?'es':''}</div>`;
+  matches.forEach(m=>{
+    const score = m.played ? `<span style="font-weight:700;color:#eee"> ${m.s1}–${m.s2}</span>` : `<span style="color:#444"> vs</span>`;
+    const pi1=getOwnerIndex(m.home); const pi2=getOwnerIndex(m.away);
+    const c1=pi1>=0?PLAYER_COLORS[pi1]:'#aaa', c2=pi2>=0?PLAYER_COLORS[pi2]:'#aaa';
+    html+=`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid #1a1a1a">
+      <span style="font-size:9px;color:#444;width:28px">M${m.mn}</span>
+      <span style="font-size:10px;color:#555;width:36px">${m.time}</span>
+      <span style="flex:1;font-size:11px;color:${c1};text-align:right">${esc(m.home)}</span>
+      ${score}
+      <span style="flex:1;font-size:11px;color:${c2}">${esc(m.away)}</span>
+      <span style="font-size:9px;color:#333;width:60px;text-align:right">${esc(m.city)}</span>
+    </div>`;
+  });
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+
 function renderMatches(){
   const phase=S.activeMatchPhase||"group";
   const phases=[{key:"group",label:"Groups"},...KO_ROUNDS.map(r=>({key:r.key,label:r.label.replace("Round of ","R").replace("-Finals","F")}))];
-  let h=`<div class="flex gap6 flex-wrap mb14">`;
+  let h=`<div class="flex items-center gap8 mb14" style="flex-wrap:wrap">`;
   phases.forEach(p=>h+=`<button class="pill-btn ${phase===p.key?'active':''}" onclick="update(s=>{s.activeMatchPhase='${p.key}'})">${p.label}</button>`);
+  h+=`<button onclick="toggleCalendar()" style="margin-left:auto;background:#1a1a2a;border:1px solid #2a2a3a;color:#74b3ce;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;flex-shrink:0">📅 Calendar</button>`;
   h+=`</div>`;
+  h+=`<div id="matchCalendar" style="display:none"></div>`;
   if(phase==="group") h+=renderGroupMatches();
   else h+=renderKOMatches(phase);
   return h;
@@ -3421,12 +3564,155 @@ function renderKODraw(phase){
 }
 
 // ── MATCHES ───────────────────────────────────────────────────────────────────
+function toggleCalendar(){
+  const el = document.getElementById('matchCalendar');
+  if(!el) return;
+  if(el.style.display==='none'||el.style.display===''){
+    el.style.display='block';
+    el.innerHTML = renderCalendarHTML();
+  } else {
+    el.style.display='none';
+  }
+}
+
+function renderCalendarHTML(){
+  // Build a map: dateStr -> [{matchNum, teams, time, group}]
+  const byDate = {};
+  function addMatch(mn, dateStr, label, city){
+    if(!byDate[dateStr]) byDate[dateStr]=[];
+    byDate[dateStr].push({mn, label, city});
+  }
+
+  // Group matches
+  GROUP_KEYS.forEach(g=>{
+    S.groupMatches[g].forEach(m=>{
+      const info=getMatchInfo(m.matchNum);
+      if(!info) return;
+      const hTeam=GROUPS[g][m.home], aTeam=GROUPS[g][m.away];
+      const played=m.played?` (${m.homeGoals}-${m.awayGoals})`:"";
+      addMatch(m.matchNum, info.dateStr, `${hTeam} v ${aTeam}${played}`, info.city);
+    });
+  });
+  // KO matches
+  KO_ROUNDS.forEach(r=>{
+    S.koMatches[r.key].forEach(m=>{
+      const info=getMatchInfo(m.matchNum);
+      if(!info) return;
+      const t1=m.team1||koSlotLabel(m.matchNum,0);
+      const t2=m.team2||koSlotLabel(m.matchNum,1);
+      const played=m.played?` (${m.goals1}-${m.goals2})`:"";
+      addMatch(m.matchNum, info.dateStr, `${t1} v ${t2}${played}`, info.city);
+    });
+  });
+
+  // Render June + July 2026
+  const months = [
+    {year:2026, month:5, name:"June"},   // month 5 = June (0-indexed)
+    {year:2026, month:6, name:"July"},
+  ];
+
+  let html = `<div style="background:#111;border:1px solid #222;border-radius:10px;padding:14px;margin-bottom:14px">`;
+  html += `<div style="font-size:10px;color:#555;letter-spacing:1px;margin-bottom:12px;text-align:center">MATCH CALENDAR · hover or tap a date</div>`;
+  html += `<div style="display:flex;gap:16px;flex-wrap:wrap">`;
+
+  months.forEach(({year,month,name})=>{
+    html += `<div style="flex:1;min-width:140px">`;
+    html += `<div style="font-size:11px;color:#aaa;font-weight:700;text-align:center;margin-bottom:8px;letter-spacing:1px">${name.toUpperCase()}</div>`;
+    html += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center">`;
+    // Day headers
+    ['M','T','W','T','F','S','S'].forEach(d=>html+=`<div style="font-size:9px;color:#444;padding:2px">${d}</div>`);
+    
+    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+    // Adjust to Mon-first
+    const offset = (firstDay+6)%7;
+    const daysInMonth = new Date(year, month+1, 0).getDate();
+    
+    // Empty cells
+    for(let i=0;i<offset;i++) html+=`<div></div>`;
+    
+    for(let d=1;d<=daysInMonth;d++){
+      const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const matches = byDate[dateStr]||[];
+      const hasMatches = matches.length>0;
+      const allPlayed = matches.length>0 && matches.every(m=>m.label.includes('('));
+      
+      const bg = hasMatches ? (allPlayed?'#1a2a1a':'#1a1a2a') : 'transparent';
+      const col = hasMatches ? (allPlayed?'#2a9d8f':'#74b3ce') : '#333';
+      const border = hasMatches ? `1px solid ${allPlayed?'#2a3a2a':'#2a2a3a'}` : '1px solid transparent';
+      
+      // Tooltip content
+      const tooltip = matches.map(m=>`M${m.mn}: ${m.label} · ${m.city}`).join('&#10;');
+      
+      html += `<div 
+        style="font-size:10px;padding:3px 1px;border-radius:4px;background:${bg};color:${col};border:${border};cursor:${hasMatches?'pointer':'default'};position:relative"
+        ${hasMatches?`onclick="showDayMatches('${dateStr}')" title="${tooltip}"`:''}
+      >${d}</div>`;
+    }
+    html += `</div></div>`;
+  });
+
+  html += `</div>`;
+  html += `<div id="calDayDetail" style="display:none;margin-top:10px;border-top:1px solid #1a1a1a;padding-top:10px"></div>`;
+  html += `</div>`;
+  return html;
+}
+
+function showDayMatches(dateStr){
+  // Re-render the popup detail section
+  const el = document.getElementById('calDayDetail');
+  if(!el) return;
+
+  const byDate = {};
+  GROUP_KEYS.forEach(g=>{
+    S.groupMatches[g].forEach(m=>{
+      const info=getMatchInfo(m.matchNum);
+      if(!info||info.dateStr!==dateStr) return;
+      if(!byDate[dateStr]) byDate[dateStr]=[];
+      const hTeam=GROUPS[g][m.home],aTeam=GROUPS[g][m.away];
+      byDate[dateStr].push({mn:m.matchNum,home:hTeam,away:aTeam,played:m.played,s1:m.homeGoals,s2:m.awayGoals,city:info.city,time:info.timeStr,group:g});
+    });
+  });
+  KO_ROUNDS.forEach(r=>{
+    S.koMatches[r.key].forEach(m=>{
+      const info=getMatchInfo(m.matchNum);
+      if(!info||info.dateStr!==dateStr) return;
+      if(!byDate[dateStr]) byDate[dateStr]=[];
+      const t1=m.team1||koSlotLabel(m.matchNum,0);
+      const t2=m.team2||koSlotLabel(m.matchNum,1);
+      byDate[dateStr].push({mn:m.matchNum,home:t1,away:t2,played:m.played,s1:m.goals1,s2:m.goals2,city:info.city,time:info.timeStr,group:r.label});
+    });
+  });
+
+  const matches = byDate[dateStr]||[];
+  const d = new Date(dateStr+'T12:00:00');
+  const label = d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+
+  let html = `<div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">${label} — ${matches.length} match${matches.length!==1?'es':''}</div>`;
+  matches.forEach(m=>{
+    const score = m.played ? `<span style="font-weight:700;color:#eee"> ${m.s1}–${m.s2}</span>` : `<span style="color:#444"> vs</span>`;
+    const pi1=getOwnerIndex(m.home); const pi2=getOwnerIndex(m.away);
+    const c1=pi1>=0?PLAYER_COLORS[pi1]:'#aaa', c2=pi2>=0?PLAYER_COLORS[pi2]:'#aaa';
+    html+=`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid #1a1a1a">
+      <span style="font-size:9px;color:#444;width:28px">M${m.mn}</span>
+      <span style="font-size:10px;color:#555;width:36px">${m.time}</span>
+      <span style="flex:1;font-size:11px;color:${c1};text-align:right">${esc(m.home)}</span>
+      ${score}
+      <span style="flex:1;font-size:11px;color:${c2}">${esc(m.away)}</span>
+      <span style="font-size:9px;color:#333;width:60px;text-align:right">${esc(m.city)}</span>
+    </div>`;
+  });
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+
 function renderMatches(){
   const phase=S.activeMatchPhase||"group";
   const phases=[{key:"group",label:"Groups"},...KO_ROUNDS.map(r=>({key:r.key,label:r.label.replace("Round of ","R").replace("-Finals","F")}))];
-  let h=`<div class="flex gap6 flex-wrap mb14">`;
+  let h=`<div class="flex items-center gap8 mb14" style="flex-wrap:wrap">`;
   phases.forEach(p=>h+=`<button class="pill-btn ${phase===p.key?'active':''}" onclick="update(s=>{s.activeMatchPhase='${p.key}'})">${p.label}</button>`);
+  h+=`<button onclick="toggleCalendar()" style="margin-left:auto;background:#1a1a2a;border:1px solid #2a2a3a;color:#74b3ce;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;flex-shrink:0">📅 Calendar</button>`;
   h+=`</div>`;
+  h+=`<div id="matchCalendar" style="display:none"></div>`;
   if(phase==="group") h+=renderGroupMatches();
   else h+=renderKOMatches(phase);
   return h;
