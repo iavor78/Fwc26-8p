@@ -1243,6 +1243,20 @@ function renderBracket(){
 }
 
 // ── DRAW ──────────────────────────────────────────────────────────────────────
+function renderKO(){
+  var phase=S.activeKOPhase||"r32";
+  if(phase==="group") return renderGroupDraw();
+  if(phase==="sf"||phase==="third"||phase==="final"){
+    var r=KO_ROUNDS.find(function(r){return r.key===phase;});
+    var label=r?r.label:phase;
+    return '<div class="card" style="text-align:center;padding:20px">'
+      +'<div style="font-size:14px;color:#aaa;margin-bottom:8px">'+label+'</div>'
+      +'<div style="font-size:12px;color:#666;line-height:1.6">No draw for this round.<br>Teams carry over from the QF draw.</div>'
+      +'</div>';
+  }
+  return renderKODraw(phase);
+}
+
 function renderDraw(){
   // Draw tabs: Groups + R32/R16/QF only (SF/3rd/Final carry over from QF)
   const drawPhases=[{key:"group",label:"Groups"},...KO_ROUNDS.filter(r=>r.slots>0).map(r=>({key:r.key,label:r.label.replace("Round of ","R").replace("-Finals","F")}))];
