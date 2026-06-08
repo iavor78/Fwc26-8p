@@ -2232,20 +2232,30 @@ function initSaveBar(){
 
 function buildDateMap(){
   var byDate={};
+  function addMatch(mn, rawDate, home, away, played, s1, s2, city, time, phase){
+    if(!byDate[rawDate]) byDate[rawDate]=[];
+    byDate[rawDate].push({mn:mn,home:home,away:away,played:played,s1:s1,s2:s2,city:city,time:time,phase:phase});
+  }
   GROUP_KEYS.forEach(function(g){
     S.groupMatches[g].forEach(function(m){
+      var sched=MATCH_SCHEDULE[m.matchNum];
+      if(!sched) return;
+      var rawDate=sched[0]; // YYYY-MM-DD
       var info=getMatchInfo(m.matchNum);
-      if(!info) return;
-      if(!byDate[info.dateStr]) byDate[info.dateStr]=[];
-      byDate[info.dateStr].push({mn:m.matchNum,home:GROUPS[g][m.home],away:GROUPS[g][m.away],played:m.played,s1:m.homeGoals,s2:m.awayGoals,city:info.city,time:info.timeStr,phase:'group'});
+      var time=info?info.timeStr:'';
+      addMatch(m.matchNum,rawDate,GROUPS[g][m.home],GROUPS[g][m.away],m.played,m.homeGoals,m.awayGoals,sched[3],time,'group');
     });
   });
   KO_ROUNDS.forEach(function(r){
     S.koMatches[r.key].forEach(function(m){
+      var sched=MATCH_SCHEDULE[m.matchNum];
+      if(!sched) return;
+      var rawDate=sched[0];
       var info=getMatchInfo(m.matchNum);
-      if(!info) return;
-      if(!byDate[info.dateStr]) byDate[info.dateStr]=[];
-      byDate[info.dateStr].push({mn:m.matchNum,home:m.team1||('M'+m.matchNum+' T1'),away:m.team2||('M'+m.matchNum+' T2'),played:m.played,s1:m.goals1,s2:m.goals2,city:info.city,time:info.timeStr,phase:r.key});
+      var time=info?info.timeStr:'';
+      var h=m.team1||(info?'M'+m.matchNum+' slot 1':'TBD');
+      var a=m.team2||(info?'M'+m.matchNum+' slot 2':'TBD');
+      addMatch(m.matchNum,rawDate,h,a,m.played,m.goals1,m.goals2,sched[3],time,r.key);
     });
   });
   return byDate;
