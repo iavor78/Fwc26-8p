@@ -1147,7 +1147,7 @@ function renderBracket(){
     const isRight = side==="right";
     const matchW = 148;
     const MH=80, GAP=8, U=MH+GAP;
-    const R32H=4*U-GAP;
+    const R32H=8*MH+7*GAP; // 8 boxes + 7 gaps = 696px
     const connW = 10;
     const horizW = 8;
     const UNIT = 64; // px per R32 slot (match ~54px + 10px gap)
@@ -1601,18 +1601,17 @@ function showCalDay(ds){
   var label=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
   var html='<div style="font-size:11px;color:#aaa;margin-bottom:8px">'+label+' &mdash; '+ms.length+' match'+(ms.length!==1?'es':'')+'</div>';
 
-  // Build label for a team slot: source label or team name
-  function slotLabel(mn, slot, teamName){
-    if(teamName && teamName.indexOf(' T')!==teamName.length-2) return flag(teamName)+' '+esc(teamName);
-    // Use bracket source label
-    var r32path=R32_PATHS.find(function(p){return p[0]===mn;});
-    if(r32path) return slot===0?r32path[1]:r32path[2];
-    var allPaths=R16_PATHS.concat(QF_PATHS,SF_PATHS);
-    var path=allPaths.find(function(p){return p[0]===mn;});
-    if(path) return 'W'+path[slot===0?1:2];
-    if(mn===103) return slot===0?'Loser M101':'Loser M102';
+  function koLabel(mn, slot){
+    // R32: show source like "2A", "1E", "T3"
+    var r32=R32_PATHS.find(function(p){return p[0]===mn;});
+    if(r32) return r32[slot+1];
+    // R16+: show "W74", "W77" etc
+    var allP=R16_PATHS.concat(QF_PATHS,SF_PATHS);
+    var p=allP.find(function(p){return p[0]===mn;});
+    if(p) return 'W'+p[slot+1];
+    if(mn===103) return slot===0?'L101':'L102';
     if(mn===104) return slot===0?'W101':'W102';
-    return teamName||'TBD';
+    return '?';
   }
 
   ms.forEach(function(m){
@@ -1620,29 +1619,30 @@ function showCalDay(ds){
     var pi2=getOwnerIndex(m.away,m.phase==='group'?null:m.phase);
     var c1=pi1>=0?PLAYER_COLORS[pi1]:'#ccc';
     var c2=pi2>=0?PLAYER_COLORS[pi2]:'#ccc';
-    var score=m.played?' <b>'+m.s1+'-'+m.s2+'</b>':'';
 
-    // For group matches: just team names
-    // For KO matches: M73: 2A v 2B or M89: W74 v W77 format
-    var homeLabel, awayLabel;
+    var homeStr, awayStr;
     if(m.phase==='group'){
-      homeLabel='<span style="color:'+c1+'">'+flag(m.home)+' '+esc(m.home)+'</span>';
-      awayLabel='<span style="color:'+c2+'">'+flag(m.away)+' '+esc(m.away)+'</span>';
+      homeStr='<span style="color:'+c1+'">'+flag(m.home)+' '+esc(m.home)+'</span>';
+      awayStr='<span style="color:'+c2+'">'+flag(m.away)+' '+esc(m.away)+'</span>';
     } else {
-      // Use source label if team not yet known, else team name
-      var hl=(!m.home||m.home.indexOf(' slot')>=0)?slotLabel(m.mn,0,null):flag(m.home)+' '+esc(m.home);
-      var al=(!m.away||m.away.indexOf(' slot')>=0)?slotLabel(m.mn,1,null):flag(m.away)+' '+esc(m.away);
-      homeLabel='<span style="color:'+c1+'">'+hl+'</span>';
-      awayLabel='<span style="color:'+c2+'">'+al+'</span>';
+      // If team known, show flag+name; else show source label
+      var isRealTeam1=m.home&&m.home.indexOf(' slot')<0&&m.home.indexOf(' T1')<0;
+      var isRealTeam2=m.away&&m.away.indexOf(' slot')<0&&m.away.indexOf(' T2')<0;
+      homeStr='<span style="color:'+c1+'">'+(isRealTeam1?flag(m.home)+' '+esc(m.home):koLabel(m.mn,0))+'</span>';
+      awayStr='<span style="color:'+c2+'">'+(isRealTeam2?flag(m.away)+' '+esc(m.away):koLabel(m.mn,1))+'</span>';
     }
 
-    html+='<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-top:1px solid #1a1a1a">'
-      +'<span style="color:#888;font-size:10px;width:28px;flex-shrink:0">M'+m.mn+'</span>'
+    var scoreStr=m.played
+      ?'<span style="color:#eee;font-weight:700;padding:0 4px">'+m.s1+'-'+m.s2+'</span>'
+      :'<span style="color:#555;padding:0 6px">v</span>';
+
+    html+='<div style="display:flex;align-items:center;gap:4px;padding:5px 0;border-top:1px solid #1a1a1a">'
+      +'<span style="color:#888;font-size:10px;width:26px;flex-shrink:0">M'+m.mn+'</span>'
       +'<span style="color:#666;font-size:10px;width:44px;flex-shrink:0">'+m.time+'</span>'
-      +'<span style="flex:1;font-size:11px;text-align:right">'+homeLabel+'</span>'
-      +(m.played?'<span style="color:#eee;font-size:11px;font-weight:700;padding:0 4px">'+m.s1+'-'+m.s2+'</span>':'<span style="color:#555;padding:0 4px">v</span>')
-      +'<span style="flex:1;font-size:11px;">'+awayLabel+'</span>'
-      +'<span style="color:#555;font-size:9px;width:60px;text-align:right;flex-shrink:0">'+esc(m.city)+'</span>'
+      +'<span style="flex:1;font-size:11px;text-align:right">'+homeStr+'</span>'
+      +scoreStr
+      +'<span style="flex:1;font-size:11px;">'+awayStr+'</span>'
+      +'<span style="color:#555;font-size:9px;width:56px;text-align:right;flex-shrink:0">'+esc(m.city)+'</span>'
       +'</div>';
   });
   el.innerHTML=html;
