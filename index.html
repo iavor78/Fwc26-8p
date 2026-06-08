@@ -1592,62 +1592,6 @@ function buildCalendarHTML(){
   return html;
 }
 
-function showCalDay(ds){
-  var byDate=buildDateMap();
-  var ms=(byDate[ds]||[]).sort(function(a,b){return a.mn-b.mn;});
-  var el=document.getElementById('calDay');
-  if(!el) return;
-  var d=new Date(ds+'T12:00:00');
-  var label=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
-  var html='<div style="font-size:11px;color:#aaa;margin-bottom:8px">'+label+' &mdash; '+ms.length+' match'+(ms.length!==1?'es':'')+'</div>';
-
-  function koLabel(mn,slot){
-    var r32=R32_PATHS.find(function(p){return p[0]===mn;});
-    if(r32) return r32[slot+1];
-    var allP=R16_PATHS.concat(QF_PATHS,SF_PATHS);
-    var p=allP.find(function(x){return x[0]===mn;});
-    if(p) return 'W'+p[slot+1];
-    if(mn===103) return slot===0?'L101':'L102';
-    if(mn===104) return slot===0?'W101':'W102';
-    return 'TBD';
-  }
-
-  ms.forEach(function(m){
-    var pi1=getOwnerIndex(m.home,m.phase==='group'?null:m.phase);
-    var pi2=getOwnerIndex(m.away,m.phase==='group'?null:m.phase);
-    var c1=pi1>=0?PLAYER_COLORS[pi1]:'#ccc';
-    var c2=pi2>=0?PLAYER_COLORS[pi2]:'#ccc';
-
-    var homeStr, awayStr;
-    if(m.phase==='group'){
-      var grpBadge=m.grp?'<span style="color:#555;font-size:9px"> Grp '+m.grp+'</span>':'';
-      homeStr='<span style="color:'+c1+'">'+flag(m.home)+' '+esc(m.home)+'</span>';
-      awayStr='<span style="color:'+c2+'">'+flag(m.away)+' '+esc(m.away)+grpBadge+'</span>';
-    } else {
-      // Use flag+name if team known, else use bracket source label
-      var hl=m.home?flag(m.home)+' '+esc(m.home):koLabel(m.mn,0);
-      var al=m.away?flag(m.away)+' '+esc(m.away):koLabel(m.mn,1);
-      homeStr='<span style="color:'+c1+'">'+hl+'</span>';
-      awayStr='<span style="color:'+c2+'">'+al+'</span>';
-    }
-
-    var scoreStr=m.played
-      ?'<span style="color:#eee;font-weight:700;padding:0 4px">'+m.s1+'-'+m.s2+'</span>'
-      :'<span style="color:#555;padding:0 6px">v</span>';
-
-    html+='<div style="display:flex;align-items:center;gap:4px;padding:5px 0;border-top:1px solid #1a1a1a">'
-      +'<span style="color:#888;font-size:10px;width:26px;flex-shrink:0">M'+m.mn+'</span>'
-      +'<span style="color:#666;font-size:10px;width:44px;flex-shrink:0">'+m.time+'</span>'
-      +'<span style="flex:1;font-size:11px;text-align:right">'+homeStr+'</span>'
-      +scoreStr
-      +'<span style="flex:1;font-size:11px;">'+awayStr+'</span>'
-      +'<span style="color:#555;font-size:9px;width:56px;text-align:right;flex-shrink:0">'+esc(m.city)+'</span>'
-      +'</div>';
-  });
-  el.innerHTML=html;
-  el.style.display='block';
-}
-
 function renderMatches(){
   const phase=S.activeMatchPhase||"group";
   const phases=[{key:"group",label:"Groups"},...KO_ROUNDS.map(r=>({key:r.key,label:r.label.replace("Round of ","R").replace("-Finals","F")}))];
