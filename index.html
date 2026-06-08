@@ -724,10 +724,11 @@ function computeTable(){
     return -1;
   }
 
-  // KO-draw-only lookup: koDraw[phase][pi] = [teamName,...]
+  // KO-draw-only lookup: SF/3rd/Final inherit from QF
   function koOwner(teamName, key){
+    const lookupKey=(key==="sf"||key==="third"||key==="final")?"qf":key;
     for(let pi=0;pi<8;pi++){
-      if((S.koDraw[key][pi]||[]).includes(teamName)) return pi;
+      if((S.koDraw[lookupKey][pi]||[]).includes(teamName)) return pi;
     }
     return -1;
   }
@@ -1014,7 +1015,12 @@ function renderTable(){
 
 function getOwnerIndex(team, koRoundKey=null){
   if(!team) return -1;
-  // KO context: only look at the specific round's draw
+  // SF/3rd/Final inherit from QF draw
+  if(koRoundKey==="sf"||koRoundKey==="third"||koRoundKey==="final"){
+    for(let pi=0;pi<8;pi++)
+      if((S.koDraw["qf"][pi]||[]).includes(team)) return pi;
+    return -1;
+  }
   if(koRoundKey){
     for(let pi=0;pi<8;pi++)
       if((S.koDraw[koRoundKey][pi]||[]).includes(team)) return pi;
