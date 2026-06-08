@@ -55,7 +55,7 @@
   .bracket{display:flex;gap:8px;min-width:max-content}
   .bracket-col{display:flex;flex-direction:column;min-width:148px}
   .bracket-col-label{font-size:10px;color:#fff;letter-spacing:1px;text-align:center;margin-bottom:4px;font-weight:700;text-transform:uppercase}
-  .bracket-match{background:#111;border-radius:6px;padding:7px 9px;border:1px solid #1a1a1a}
+  .bracket-match{background:#111;border-radius:6px;padding:7px 9px;border:1px solid #1a1a1a;box-sizing:border-box}
   .bracket-match-num{font-size:9px;color:#aaa;margin-bottom:4px;letter-spacing:.8px}
   .bracket-team{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
   .bracket-score{font-size:12px;font-weight:700;color:#555;min-width:14px;text-align:center;flex-shrink:0}
@@ -78,7 +78,7 @@
   .btn-teal{background:#1a2a1a;border:1px solid #2a3a2a;color:#2a9d8f}
   .btn-purple{background:#1a1a2a;border:1px solid #2a2a3a;color:#a78bfa}
   .btn-red{background:#1a0808;border:1px solid #3a1010;color:#e63946}
-  .match-num-label{font-size:10px;color:#333;margin-bottom:8px;letter-spacing:1px}
+  .match-num-label{font-size:10px;color:#aaa;margin-bottom:8px;letter-spacing:1px}
   @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
@@ -1163,11 +1163,12 @@ function renderBracket(){
     // So top spacer = UNIT/2 - matchHeight/2 ... but easier: use flex centering
 
     // R16: each centred between its 2 R32 — top spacer = UNIT - half match
-    const MH=54, GAP=8, U=MH+GAP; // ~62px per slot
-    // Top spacer = centre of pair = U - MH/2 - GAP/2
-    const TOP1=U-MH/2-GAP/2;        // R16 top spacer
-    const TOP2=2*U-MH/2-GAP/2;      // QF top spacer
-    const TOP3=4*U-MH/2-GAP/2;      // SF top spacer
+    // Fixed heights measured from rendered output
+    // Each R32 box ~80px tall, gap 8px between boxes, so slot = 88px
+    const MH=80, GAP=8, U=MH+GAP; // 88px per R32 slot
+    const TOP1=U-MH/2-GAP/2;        // R16 centres between 2 R32 boxes
+    const TOP2=2*U-MH/2-GAP/2;      // QF centres between 2 R16 slots  
+    const TOP3=4*U-MH/2-GAP/2;      // SF centres between 2 QF slots
     r16nums.forEach((mn,i)=>{
       if(i>0) R16col += `<div style="height:${GAP}px"></div>`;
       R16col += `<div style="height:${TOP1}px"></div>`;
@@ -1444,7 +1445,7 @@ function renderKODraw(phase){
       const srcPath=R32_PATHS.find(p=>p[0]===m.matchNum);
       const src1=srcPath?srcPath[1]:"?", src2=srcPath?srcPath[2]:"?";
       h+=`<div style="margin-bottom:8px">
-        <div style="font-size:9px;color:#888;margin-bottom:3px;letter-spacing:.8px">M${m.matchNum} · <span style="color:#333">${src1}</span> vs <span style="color:#333">${src2}</span></div>
+        <div style="font-size:9px;color:#888;margin-bottom:3px;letter-spacing:.8px">M${m.matchNum} · <span style="color:#aaa">${src1}</span> vs <span style="color:#aaa">${src2}</span></div>
         <div style="display:flex;gap:6px">
           <input type="text" value="${esc(m.team1||"")}" placeholder="${src1==="T3"?"3rd-place qualifier":src1}"
             list="allTeamsList"
@@ -1647,13 +1648,13 @@ function renderGroupMatches(){
     h+=`<div class="card ${m.played?'done':''}">
       <div class="flex justify-between items-center mb8">
         <div class="match-num-label" style="margin-bottom:0">M${m.matchNum} · Group ${g}</div>
-        ${minfo?`<div style="font-size:10px;color:#555;text-align:right">${minfo.dateStr} · ${minfo.timeStr}<br><span style="color:#333">${minfo.city}</span></div>`:""}
+        ${minfo?`<div style="font-size:10px;color:#bbb;text-align:right">${minfo.dateStr} · ${minfo.timeStr}<br><span style="color:#aaa">${minfo.city}</span></div>`:""}
       </div>
       <div class="flex items-center gap6">
         <div class="flex-1">
           <div style="font-size:10px;color:${hCol};font-weight:700;margin-bottom:2px">${ho>=0?esc(S.playerNames[ho]):"—"}</div>
           <div style="font-size:13px;color:#ddd;font-weight:600">${flag(hTeam)} ${esc(hTeam)}</div>
-          <div style="font-size:10px;color:#444;margin-top:2px">FIFA #${rank(hTeam)}</div>
+          <div style="font-size:10px;color:#aaa;margin-top:2px">FIFA #${rank(hTeam)}</div>
         </div>
         <div class="flex items-center gap6" style="flex-shrink:0">
           <input type="number" min="0" max="20" class="score-input" value="${m.homeGoals}"
@@ -1667,7 +1668,7 @@ function renderGroupMatches(){
         <div class="flex-1" style="text-align:right">
           <div style="font-size:10px;color:${aCol};font-weight:700;margin-bottom:2px">${ao>=0?esc(S.playerNames[ao]):"—"}</div>
           <div style="font-size:13px;color:#ddd;font-weight:600">${flag(aTeam)} ${esc(aTeam)}</div>
-          <div style="font-size:10px;color:#444;margin-top:2px">FIFA #${rank(aTeam)}</div>
+          <div style="font-size:10px;color:#aaa;margin-top:2px">FIFA #${rank(aTeam)}</div>
         </div>
         <button class="done-btn ${m.played?'active':''}"
           onclick="update(s=>{const m=s.groupMatches['${g}'][${idx}];if(m.homeGoals!==''&&m.awayGoals!=='')m.played=!m.played})">
@@ -1711,7 +1712,7 @@ function renderKOMatches(phase){
     h+=`<div class="card ${m.played?'done':''}">
       <div class="flex justify-between items-center mb8">
         <div class="match-num-label" style="margin-bottom:0">M${m.matchNum}</div>
-        ${minfo2?`<div style="font-size:10px;color:#555;text-align:right">${minfo2.dateStr} · ${minfo2.timeStr}<br><span style="color:#333">${minfo2.city}</span></div>`:""}
+        ${minfo2?`<div style="font-size:10px;color:#bbb;text-align:right">${minfo2.dateStr} · ${minfo2.timeStr}<br><span style="color:#aaa">${minfo2.city}</span></div>`:""}
       </div>
       <div class="flex items-center gap6">
         <div class="flex-1">
