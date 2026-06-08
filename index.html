@@ -80,11 +80,31 @@
   .btn-red{background:#1a0808;border:1px solid #3a1010;color:#e63946}
   .match-num-label{font-size:10px;color:#aaa;margin-bottom:8px;letter-spacing:1px}
   @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes bounce{from{transform:translateY(0) scale(1)}to{transform:translateY(-12px) scale(1.15)}}
+  @keyframes fadeInScale{from{opacity:0;transform:scale(0.6)}to{opacity:1;transform:scale(1)}}
+  #winnerPopup{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.85);align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:20px}
+  #winnerPopup.show{display:flex}
+  .confetti-emoji{font-size:48px;animation:bounce 0.6s infinite alternate}
+  @keyframes bounce{from{transform:translateY(0) scale(1)}to{transform:translateY(-10px) scale(1.1)}}
+  @keyframes fadeInScale{from{opacity:0;transform:scale(0.7)}to{opacity:1;transform:scale(1)}}
+
 </style>
 </head>
 <body>
 <div id="loading" style="display:none"></div>
 <div id="app">
+<div id="winnerPopup" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.88);align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:20px">
+  <div style="animation:fadeInScale 0.5s ease-out;max-width:340px">
+    <div style="font-size:52px;animation:bounce 0.6s infinite alternate">🏆</div>
+    <div style="font-size:11px;color:#aaa;letter-spacing:2px;margin:16px 0 8px">WORLD CUP 2026 WINNER</div>
+    <div id="winnerCountry" style="font-size:38px;margin-bottom:8px"></div>
+    <div id="winnerTeam" style="font-size:22px;color:#e9c46a;font-weight:700;margin-bottom:6px"></div>
+    <div id="winnerPlayer" style="font-size:15px;color:#aaa;margin-bottom:24px"></div>
+    <div style="font-size:32px;margin-bottom:24px">🎉🥇🎉</div>
+    <button onclick="document.getElementById('winnerPopup').style.display='none';window._winnerDismissed=true;"
+      style="background:#1a1a1a;border:1px solid #444;color:#eee;padding:10px 28px;border-radius:8px;font-size:14px;cursor:pointer">Close</button>
+  </div>
+</div>
 
   <div style="position:relative;overflow:hidden;border-bottom:1px solid #1a0a0a;padding-top:max(0px,env(safe-area-inset-top))">
     <!-- FLAGS BANNER: three flags merged side by side with blend -->
@@ -800,6 +820,7 @@ function render(){
     case "players": el.innerHTML=renderPlayers();break;
   }
   attachHandlers();
+  checkWinner();
 }
 
 // ── GROUPS TABLE ──────────────────────────────────────────────────────────────
@@ -1134,11 +1155,11 @@ function renderBracket(){
 
     let R32col = `<div class="bracket-col" style="gap:8px">
       <div class="bracket-col-label">${isRight?"R32":""}</div>`;
-    let R16col = `<div class="bracket-col" style="gap:8px">
+    let R16col = `<div class="bracket-col" style="gap:8px;height:${R32H}px;justify-content:space-around">
       <div class="bracket-col-label">${isRight?"R16":""}</div>`;
-    let QFcol = `<div class="bracket-col" style="gap:8px">
+    let QFcol = `<div class="bracket-col" style="gap:8px;height:${R32H}px;justify-content:space-around">
       <div class="bracket-col-label">${isRight?"QF":""}</div>`;
-    let SFcol = `<div class="bracket-col">
+    let SFcol = `<div class="bracket-col" style="height:${R32H}px;justify-content:center">
       <div class="bracket-col-label">${isRight?"SF":""}</div>`;
 
     if(!isRight){
@@ -1169,26 +1190,26 @@ function renderBracket(){
     const TOP1=U-MH/2-GAP/2;        // R16 centres between 2 R32 boxes
     const TOP2=2*U-MH/2-GAP/2;      // QF centres between 2 R16 slots  
     const TOP3=4*U-MH/2-GAP/2;      // SF centres between 2 QF slots
+    // R16: use flex with space-around so each match centres between its 2 R32 feeders
+    // Total height of R32 column = 4 matches * (MH+GAP) - GAP = 4*U - GAP
+    const R32H = 4*U - GAP;
     r16nums.forEach((mn,i)=>{
-      if(i>0) R16col += `<div style="height:${GAP}px"></div>`;
-      R16col += `<div style="height:${TOP1}px"></div>`;
+      R16col += `<div style="flex:1;display:flex;align-items:center;justify-content:center">`;
       R16col += bm(mn);
-      R16col += `<div style="height:${TOP1}px"></div>`;
+      R16col += `</div>`;
     });
     R16col += `</div>`;
 
     qfNums.forEach((mn,i)=>{
-      if(i>0) QFcol += `<div style="height:${GAP}px"></div>`;
-      QFcol += `<div style="height:${TOP2}px"></div>`;
+      QFcol += `<div style="flex:1;display:flex;align-items:center;justify-content:center">`;
       QFcol += bm(mn);
-      QFcol += `<div style="height:${TOP2}px"></div>`;
+      QFcol += `</div>`;
     });
     QFcol += `</div>`;
 
-    SFcol += `<div style="height:${TOP3}px"></div>`;
+    SFcol += `<div style="flex:1;display:flex;align-items:center;justify-content:center">`;
     SFcol += bm(sfNum);
-    SFcol += `<div style="height:${TOP3}px"></div>`;
-    SFcol += `</div>`;
+    SFcol += `</div></div>`;
 
     if(!isRight){
       return R32col + R16col + QFcol + SFcol;
@@ -1578,44 +1599,60 @@ function buildCalendarHTML(){
 }
 
 function showCalDay(ds){
-  var byDate={};
-  function add(mn,d2,home,away,played,s1,s2,city,time){
-    if(d2!==ds) return;
-    if(!byDate[ds]) byDate[ds]=[];
-    byDate[ds].push({mn:mn,home:home,away:away,played:played,s1:s1,s2:s2,city:city,time:time});
-  }
-  GROUP_KEYS.forEach(function(g){
-    S.groupMatches[g].forEach(function(m){
-      var info=getMatchInfo(m.matchNum);
-      if(info) add(m.matchNum,info.dateStr,GROUPS[g][m.home],GROUPS[g][m.away],m.played,m.homeGoals,m.awayGoals,info.city,info.timeStr);
-    });
-  });
-  KO_ROUNDS.forEach(function(r){
-    S.koMatches[r.key].forEach(function(m){
-      var info=getMatchInfo(m.matchNum);
-      if(!info) return;
-      add(m.matchNum,info.dateStr,m.team1||"TBD",m.team2||"TBD",m.played,m.goals1,m.goals2,info.city,info.timeStr);
-    });
-  });
-  var el=document.getElementById("calDay");
+  var byDate=buildDateMap();
+  var ms=(byDate[ds]||[]).sort(function(a,b){return a.mn-b.mn;});
+  var el=document.getElementById('calDay');
   if(!el) return;
-  var mx=(byDate[ds]||[]).sort(function(a,b){return a.mn-b.mn;});
-  var dt=new Date(ds+"T12:00:00");
-  var lbl=dt.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
-  var html='<div style="font-size:11px;color:#aaa;font-weight:700;margin-bottom:8px">'+lbl+' &mdash; '+mx.length+' match'+(mx.length!==1?'es':'')+'</div>';
-  mx.forEach(function(m){
-    var score=m.played?(' <b style="color:#eee">'+m.s1+'&ndash;'+m.s2+'</b>'):" vs";
+  var d=new Date(ds+'T12:00:00');
+  var label=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+  var html='<div style="font-size:11px;color:#aaa;margin-bottom:8px">'+label+' &mdash; '+ms.length+' match'+(ms.length!==1?'es':'')+'</div>';
+
+  // Build label for a team slot: source label or team name
+  function slotLabel(mn, slot, teamName){
+    if(teamName && teamName.indexOf(' T')!==teamName.length-2) return flag(teamName)+' '+esc(teamName);
+    // Use bracket source label
+    var r32path=R32_PATHS.find(function(p){return p[0]===mn;});
+    if(r32path) return slot===0?r32path[1]:r32path[2];
+    var allPaths=R16_PATHS.concat(QF_PATHS,SF_PATHS);
+    var path=allPaths.find(function(p){return p[0]===mn;});
+    if(path) return 'W'+path[slot===0?1:2];
+    if(mn===103) return slot===0?'Loser M101':'Loser M102';
+    if(mn===104) return slot===0?'W101':'W102';
+    return teamName||'TBD';
+  }
+
+  ms.forEach(function(m){
+    var pi1=getOwnerIndex(m.home,m.phase==='group'?null:m.phase);
+    var pi2=getOwnerIndex(m.away,m.phase==='group'?null:m.phase);
+    var c1=pi1>=0?PLAYER_COLORS[pi1]:'#ccc';
+    var c2=pi2>=0?PLAYER_COLORS[pi2]:'#ccc';
+    var score=m.played?' <b>'+m.s1+'-'+m.s2+'</b>':'';
+
+    // For group matches: just team names
+    // For KO matches: M73: 2A v 2B or M89: W74 v W77 format
+    var homeLabel, awayLabel;
+    if(m.phase==='group'){
+      homeLabel='<span style="color:'+c1+'">'+flag(m.home)+' '+esc(m.home)+'</span>';
+      awayLabel='<span style="color:'+c2+'">'+flag(m.away)+' '+esc(m.away)+'</span>';
+    } else {
+      // Use source label if team not yet known, else team name
+      var hl=(!m.home||m.home.indexOf(' slot')>=0)?slotLabel(m.mn,0,null):flag(m.home)+' '+esc(m.home);
+      var al=(!m.away||m.away.indexOf(' slot')>=0)?slotLabel(m.mn,1,null):flag(m.away)+' '+esc(m.away);
+      homeLabel='<span style="color:'+c1+'">'+hl+'</span>';
+      awayLabel='<span style="color:'+c2+'">'+al+'</span>';
+    }
+
     html+='<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-top:1px solid #1a1a1a">'
-      +'<span style="font-size:9px;color:#444;width:28px">M'+m.mn+'</span>'
-      +'<span style="font-size:10px;color:#555;width:40px">'+m.time+'</span>'
-      +'<span style="flex:1;font-size:11px;color:#ddd;text-align:right">'+esc(m.home)+'</span>'
-      +'<span style="font-size:11px;color:#555;padding:0 4px">'+score+'</span>'
-      +'<span style="flex:1;font-size:11px;color:#ddd">'+esc(m.away)+'</span>'
-      +'<span style="font-size:9px;color:#444;width:70px;text-align:right">'+esc(m.city)+'</span>'
+      +'<span style="color:#888;font-size:10px;width:28px;flex-shrink:0">M'+m.mn+'</span>'
+      +'<span style="color:#666;font-size:10px;width:44px;flex-shrink:0">'+m.time+'</span>'
+      +'<span style="flex:1;font-size:11px;text-align:right">'+homeLabel+'</span>'
+      +(m.played?'<span style="color:#eee;font-size:11px;font-weight:700;padding:0 4px">'+m.s1+'-'+m.s2+'</span>':'<span style="color:#555;padding:0 4px">v</span>')
+      +'<span style="flex:1;font-size:11px;">'+awayLabel+'</span>'
+      +'<span style="color:#555;font-size:9px;width:60px;text-align:right;flex-shrink:0">'+esc(m.city)+'</span>'
       +'</div>';
   });
   el.innerHTML=html;
-  el.style.display="block";
+  el.style.display='block';
 }
 
 function renderMatches(){
@@ -2338,6 +2375,33 @@ function showCalDay(ds){
       +'</div>';
   });
   el.innerHTML=html; el.style.display='block';
+}
+
+function checkWinner(){
+  if(window._winnerDismissed) return;
+  var finalMatches=S.koMatches['final'];
+  if(!finalMatches||!finalMatches.length) return;
+  var final=finalMatches[0];
+  if(!final||!final.played) return;
+  var g1=parseInt(final.goals1), g2=parseInt(final.goals2);
+  if(isNaN(g1)||isNaN(g2)) return;
+  var winTeam;
+  if(final.penWinner) winTeam=final.penWinner;
+  else if(g1>g2) winTeam=final.team1;
+  else if(g2>g1) winTeam=final.team2;
+  else return;
+  if(!winTeam) return;
+  if(window._lastWinner===winTeam) return;
+  window._lastWinner=winTeam;
+  var pi=getOwnerIndex(winTeam,'final');
+  var playerName=pi>=0?S.playerNames[pi]:'Unknown';
+  var playerColor=pi>=0?PLAYER_COLORS[pi]:'#e9c46a';
+  var popup=document.getElementById('winnerPopup');
+  if(!popup) return;
+  document.getElementById('winnerCountry').innerHTML=flag(winTeam)+' '+esc(winTeam);
+  document.getElementById('winnerTeam').textContent=winTeam;
+  document.getElementById('winnerPlayer').innerHTML='<span style="color:'+playerColor+';font-weight:700">'+esc(playerName)+'</span> wins! 🎊';
+  popup.style.display='flex';
 }
 
 function init(){
