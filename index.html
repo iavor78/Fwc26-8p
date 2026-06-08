@@ -2270,7 +2270,7 @@ function drawCalendar(){
     html+='<div style="flex:1;min-width:130px">';
     html+='<div style="font-size:10px;color:#bbb;font-weight:700;text-align:center;margin-bottom:6px">'+mo.n+'</div>';
     html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px">';
-    ['M','T','W','T','F','S','S'].forEach(function(d){html+='<div style="font-size:8px;color:#444;text-align:center;padding:2px">'+d+'</div>';});
+    ['M','T','W','T','F','S','S'].forEach(function(d){html+='<div style="font-size:8px;color:#666;text-align:center;padding:2px">'+d+'</div>';});
     var first=(new Date(mo.y,mo.m,1).getDay()+6)%7;
     var last=new Date(mo.y,mo.m+1,0).getDate();
     for(var i=0;i<first;i++) html+='<div></div>';
@@ -2280,16 +2280,29 @@ function drawCalendar(){
       var has=ms.length>0;
       var done=has&&ms.every(function(x){return x.played;});
       var bg=has?(done?'#1a2a1a':'#1a1a2a'):'transparent';
-      var fg=has?(done?'#2a9d8f':'#74b3ce'):'#333';
+      var fg=has?(done?'#2a9d8f':'#74b3ce'):'#555';
       var bd=has?'1px solid '+(done?'#2a4a2a':'#2a2a4a'):'1px solid transparent';
-      html+='<div style="font-size:9px;text-align:center;padding:3px 1px;border-radius:3px;background:'+bg+';color:'+fg+';border:'+bd+';cursor:'+(has?'pointer':'default')+'"'
-        +(has?' data-ds="'+ds+'" onclick="showCalDay(this.dataset.ds)"':'')
+      // Use data-ds attribute — event delegation handles the click
+      html+='<div style="font-size:9px;text-align:center;padding:4px 1px;border-radius:3px;background:'+bg+';color:'+fg+';border:'+bd+';cursor:'+(has?'pointer':'default')+'"'
+        +(has?' data-ds="'+ds+'"':'')
         +'>'+d+'</div>';
     }
     html+='</div></div>';
   });
-  html+='</div><div id="calDay" style="display:none;margin-top:10px;border-top:1px solid #1a1a1a;padding-top:8px"></div></div>';
+  html+='</div><div id="calDay" style="display:none;margin-top:10px;border-top:1px solid #222;padding-top:8px"></div></div>';
   el.innerHTML=html;
+
+  // Attach click via event delegation on the container (works on all mobile browsers)
+  el.addEventListener('click', function(e){
+    var target=e.target;
+    while(target && target!==el){
+      if(target.dataset && target.dataset.ds){
+        showCalDay(target.dataset.ds);
+        return;
+      }
+      target=target.parentElement;
+    }
+  });
 }
 
 function showCalDay(ds){
