@@ -1164,27 +1164,29 @@ function renderBracket(){
 
     // R16: each centred between its 2 R32 — top spacer = UNIT - half match
     const MH=54, GAP=8, U=MH+GAP; // ~62px per slot
+    // Top spacer = centre of pair = U - MH/2 - GAP/2
+    const TOP1=U-MH/2-GAP/2;        // R16 top spacer
+    const TOP2=2*U-MH/2-GAP/2;      // QF top spacer
+    const TOP3=4*U-MH/2-GAP/2;      // SF top spacer
     r16nums.forEach((mn,i)=>{
       if(i>0) R16col += `<div style="height:${GAP}px"></div>`;
-      R16col += `<div style="height:${U-MH/2-GAP/2}px"></div>`;
+      R16col += `<div style="height:${TOP1}px"></div>`;
       R16col += bm(mn);
-      R16col += `<div style="height:${U-MH/2-GAP/2}px"></div>`;
+      R16col += `<div style="height:${TOP1}px"></div>`;
     });
     R16col += `</div>`;
 
-    // QF: each centred between 2 R16 slots (each R16 slot = 2*U)
     qfNums.forEach((mn,i)=>{
       if(i>0) QFcol += `<div style="height:${GAP}px"></div>`;
-      QFcol += `<div style="height:${2*U-MH/2-GAP/2}px"></div>`;
+      QFcol += `<div style="height:${TOP2}px"></div>`;
       QFcol += bm(mn);
-      QFcol += `<div style="height:${2*U-MH/2-GAP/2}px"></div>`;
+      QFcol += `<div style="height:${TOP2}px"></div>`;
     });
     QFcol += `</div>`;
 
-    // SF: centred between 2 QF slots (each QF slot = 4*U)
-    SFcol += `<div style="height:${4*U-MH/2-GAP/2}px"></div>`;
+    SFcol += `<div style="height:${TOP3}px"></div>`;
     SFcol += bm(sfNum);
-    SFcol += `<div style="height:${4*U-MH/2-GAP/2}px"></div>`;
+    SFcol += `<div style="height:${TOP3}px"></div>`;
     SFcol += `</div>`;
 
     if(!isRight){
@@ -1238,24 +1240,35 @@ function renderKO(){
   if(phase==="sf"||phase==="third"||phase==="final"){
     var r=KO_ROUNDS.find(function(x){return x.key===phase;});
     var label=r?r.label:phase;
-    // Show who is still in based on QF results
-    var html='<div class="card" style="text-align:center;padding:16px">'
-      +'<div style="font-size:13px;color:#eee;margin-bottom:8px">'+label+'</div>'
-      +'<div style="font-size:12px;color:#aaa;margin-bottom:16px">Teams carry over from QF draw</div>';
-    // Show each player and their QF team + if still alive
-    html+='<div style="text-align:left">';
+    // Teams active in this phase = those appearing in the phase's koMatches
+    var phaseTeams=S.koMatches[phase].reduce(function(t,m){
+      if(m.team1) t.push(m.team1);
+      if(m.team2) t.push(m.team2);
+      return t;
+    },[]);
+    var html='<div class="card" style="padding:14px">'
+      +'<div style="font-size:13px;color:#eee;font-weight:700;margin-bottom:4px">'+label+'</div>'
+      +'<div style="font-size:11px;color:#aaa;margin-bottom:14px">Teams carry over from QF draw</div>'
+      +'<div>';
     S.playerNames.forEach(function(name,pi){
       var qfTeams=(S.koDraw['qf'][pi]||[]).filter(Boolean);
       if(!qfTeams.length) return;
-      // Check if any QF team won (is in SF koMatches teams)
-      var sfTeams=S.koMatches['sf'].reduce(function(t,m){if(m.team1)t.push(m.team1);if(m.team2)t.push(m.team2);return t;},[]);
-      var alive=qfTeams.some(function(t){return sfTeams.includes(t);});
-      var team=qfTeams[0];
+      // A player is active if any of their QF teams appear in this phase's matches
+      var alive=phaseTeams.length===0
+        ? qfTeams.some(function(t){ // no results yet - check if in SF (auto-populated)
+            return S.koMatches['sf'].some(function(m){return m.team1===t||m.team2===t;});
+          })
+        : qfTeams.some(function(t){ return phaseTeams.includes(t); });
       html+='<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #1a1a1a">'
         +'<span class="player-dot" style="background:'+PLAYER_COLORS[pi]+'"></span>'
         +'<span style="font-size:12px;font-weight:700;color:'+PLAYER_COLORS[pi]+';width:80px">'+esc(name)+'</span>'
-        +(team?flag(team)+' <span style="font-size:11px;color:#ddd">'+esc(team)+'</span>':'')
-        +'<span style="margin-left:auto;font-size:11px;color:'+(alive?'#2a9d8f':'#e63946')+'">'+(alive?'✓ active':'✗ eliminated')+'</span>'
+        +'<div style="flex:1;display:flex;gap:4px;flex-wrap:wrap">'
+        +qfTeams.map(function(t){
+          var inPhase=phaseTeams.includes(t)||(phaseTeams.length===0&&S.koMatches['sf'].some(function(m){return m.team1===t||m.team2===t;}));
+          return '<span style="font-size:10px;color:'+(inPhase?'#eee':'#444')+'">'+flag(t)+' '+esc(t)+'</span>';
+        }).join('')
+        +'</div>'
+        +'<span style="font-size:11px;color:'+(alive?'#2a9d8f':'#e63946')+';flex-shrink:0">'+(alive?'✓':'✗')+'</span>'
         +'</div>';
     });
     html+='</div></div>';
@@ -1610,7 +1623,7 @@ function renderMatches(){
   let h=`<div class="flex items-center gap6 mb14" style="flex-wrap:wrap">`;
   phases.forEach(p=>h+=`<button class="pill-btn ${phase===p.key?'active':''}" onclick="update(s=>{s.activeMatchPhase='${p.key}'})">${p.label}</button>`);
   h+=`<button onclick="toggleCalendar()" style="margin-left:auto;background:#1a1a2a;border:1px solid #2a2a3a;color:#74b3ce;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;flex-shrink:0">📅</button></div>`;
-  h+=`<div id="matchCalendar" style="display:none"></div>`;
+  h+=`<div id="matchCal" style="display:none"></div>`;
   if(phase==="group") h+=renderGroupMatches();
   else h+=renderKOMatches(phase);
   return h;
