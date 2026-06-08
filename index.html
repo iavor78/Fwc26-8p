@@ -1601,17 +1601,15 @@ function showCalDay(ds){
   var label=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
   var html='<div style="font-size:11px;color:#aaa;margin-bottom:8px">'+label+' &mdash; '+ms.length+' match'+(ms.length!==1?'es':'')+'</div>';
 
-  function koLabel(mn, slot){
-    // R32: show source like "2A", "1E", "T3"
+  function koLabel(mn,slot){
     var r32=R32_PATHS.find(function(p){return p[0]===mn;});
     if(r32) return r32[slot+1];
-    // R16+: show "W74", "W77" etc
     var allP=R16_PATHS.concat(QF_PATHS,SF_PATHS);
-    var p=allP.find(function(p){return p[0]===mn;});
+    var p=allP.find(function(x){return x[0]===mn;});
     if(p) return 'W'+p[slot+1];
     if(mn===103) return slot===0?'L101':'L102';
     if(mn===104) return slot===0?'W101':'W102';
-    return '?';
+    return 'TBD';
   }
 
   ms.forEach(function(m){
@@ -1622,14 +1620,15 @@ function showCalDay(ds){
 
     var homeStr, awayStr;
     if(m.phase==='group'){
+      var grpBadge=m.grp?'<span style="color:#555;font-size:9px"> Grp '+m.grp+'</span>':'';
       homeStr='<span style="color:'+c1+'">'+flag(m.home)+' '+esc(m.home)+'</span>';
-      awayStr='<span style="color:'+c2+'">'+flag(m.away)+' '+esc(m.away)+'</span>';
+      awayStr='<span style="color:'+c2+'">'+flag(m.away)+' '+esc(m.away)+grpBadge+'</span>';
     } else {
-      // If team known, show flag+name; else show source label
-      var isRealTeam1=m.home&&m.home.indexOf(' slot')<0&&m.home.indexOf(' T1')<0;
-      var isRealTeam2=m.away&&m.away.indexOf(' slot')<0&&m.away.indexOf(' T2')<0;
-      homeStr='<span style="color:'+c1+'">'+(isRealTeam1?flag(m.home)+' '+esc(m.home):koLabel(m.mn,0))+'</span>';
-      awayStr='<span style="color:'+c2+'">'+(isRealTeam2?flag(m.away)+' '+esc(m.away):koLabel(m.mn,1))+'</span>';
+      // Use flag+name if team known, else use bracket source label
+      var hl=m.home?flag(m.home)+' '+esc(m.home):koLabel(m.mn,0);
+      var al=m.away?flag(m.away)+' '+esc(m.away):koLabel(m.mn,1);
+      homeStr='<span style="color:'+c1+'">'+hl+'</span>';
+      awayStr='<span style="color:'+c2+'">'+al+'</span>';
     }
 
     var scoreStr=m.played
@@ -2263,9 +2262,9 @@ function initSaveBar(){
 
 function buildDateMap(){
   var byDate={};
-  function addMatch(mn, rawDate, home, away, played, s1, s2, city, time, phase){
+  function addMatch(mn, rawDate, home, away, played, s1, s2, city, time, phase, grp){
     if(!byDate[rawDate]) byDate[rawDate]=[];
-    byDate[rawDate].push({mn:mn,home:home,away:away,played:played,s1:s1,s2:s2,city:city,time:time,phase:phase});
+    byDate[rawDate].push({mn:mn,home:home,away:away,played:played,s1:s1,s2:s2,city:city,time:time,phase:phase,grp:grp||null});
   }
   GROUP_KEYS.forEach(function(g){
     S.groupMatches[g].forEach(function(m){
@@ -2274,7 +2273,7 @@ function buildDateMap(){
       var rawDate=sched[0]; // YYYY-MM-DD
       var info=getMatchInfo(m.matchNum);
       var time=info?info.timeStr:'';
-      addMatch(m.matchNum,rawDate,GROUPS[g][m.home],GROUPS[g][m.away],m.played,m.homeGoals,m.awayGoals,sched[3],time,'group');
+      addMatch(m.matchNum,rawDate,GROUPS[g][m.home],GROUPS[g][m.away],m.played,m.homeGoals,m.awayGoals,sched[3],time,'group',g);
     });
   });
   KO_ROUNDS.forEach(function(r){
@@ -2284,8 +2283,8 @@ function buildDateMap(){
       var rawDate=sched[0];
       var info=getMatchInfo(m.matchNum);
       var time=info?info.timeStr:'';
-      var h=m.team1||(info?'M'+m.matchNum+' slot 1':'TBD');
-      var a=m.team2||(info?'M'+m.matchNum+' slot 2':'TBD');
+      var h=m.team1||null;
+      var a=m.team2||null;
       addMatch(m.matchNum,rawDate,h,a,m.played,m.goals1,m.goals2,sched[3],time,r.key);
     });
   });
