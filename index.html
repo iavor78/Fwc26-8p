@@ -1146,6 +1146,8 @@ function renderBracket(){
     // side: "left" = connects right, "right" = connects left (mirrored)
     const isRight = side==="right";
     const matchW = 148;
+    const MH=80, GAP=8, U=MH+GAP;
+    const R32H=4*U-GAP;
     const connW = 10;
     const horizW = 8;
     const UNIT = 64; // px per R32 slot (match ~54px + 10px gap)
@@ -1184,15 +1186,7 @@ function renderBracket(){
     // So top spacer = UNIT/2 - matchHeight/2 ... but easier: use flex centering
 
     // R16: each centred between its 2 R32 — top spacer = UNIT - half match
-    // Fixed heights measured from rendered output
-    // Each R32 box ~80px tall, gap 8px between boxes, so slot = 88px
-    const MH=80, GAP=8, U=MH+GAP; // 88px per R32 slot
-    const TOP1=U-MH/2-GAP/2;        // R16 centres between 2 R32 boxes
-    const TOP2=2*U-MH/2-GAP/2;      // QF centres between 2 R16 slots  
-    const TOP3=4*U-MH/2-GAP/2;      // SF centres between 2 QF slots
-    // R16: use flex with space-around so each match centres between its 2 R32 feeders
-    // Total height of R32 column = 4 matches * (MH+GAP) - GAP = 4*U - GAP
-    const R32H = 4*U - GAP;
+
     r16nums.forEach((mn,i)=>{
       R16col += `<div style="flex:1;display:flex;align-items:center;justify-content:center">`;
       R16col += bm(mn);
