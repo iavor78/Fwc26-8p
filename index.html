@@ -2347,32 +2347,40 @@ function showCalDay(ds){
 }
 
 function checkWinner(){
-  if(window._winnerDismissed) return;
+  // Only show once per session
+  if(window._winnerShown) return;
   var finalMatches=S.koMatches['final'];
   if(!finalMatches||!finalMatches.length) return;
   var final=finalMatches[0];
   if(!final||!final.played) return;
   var g1=parseInt(final.goals1), g2=parseInt(final.goals2);
   if(isNaN(g1)||isNaN(g2)) return;
+
+  // World Cup winning team
   var winTeam;
   if(final.penWinner) winTeam=final.penWinner;
   else if(g1>g2) winTeam=final.team1;
   else if(g2>g1) winTeam=final.team2;
   else return;
   if(!winTeam) return;
-  if(window._lastWinner===winTeam) return;
-  window._lastWinner=winTeam;
-  var pi=getOwnerIndex(winTeam,'final');
-  var playerName=pi>=0?S.playerNames[pi]:'Unknown';
+
+  // League winner = top of the table
+  var rows=computeTable();
+  if(!rows||!rows.length) return;
+  var leagueWinner=rows[0];
+  var pi=S.playerNames.indexOf(leagueWinner.name);
   var playerColor=pi>=0?PLAYER_COLORS[pi]:'#e9c46a';
+
   var popup=document.getElementById('winnerPopup');
   if(!popup) return;
   document.getElementById('winnerCountry').innerHTML=flag(winTeam)+' '+esc(winTeam);
-  document.getElementById('winnerTeam').textContent=winTeam;
-  document.getElementById('winnerPlayer').innerHTML='<span style="color:'+playerColor+';font-weight:700">'+esc(playerName)+'</span> wins! 🎊';
+  document.getElementById('winnerTeam').textContent='World Cup Champions';
+  document.getElementById('winnerPlayer').innerHTML=
+    '🏆 League winner: <span style="color:'+playerColor+';font-weight:700">'+esc(leagueWinner.name)+'</span>'
+    +'<br><span style="font-size:12px;color:#888">'+leagueWinner.pts+' pts · GD '+leagueWinner.gd+'</span>';
   popup.style.display='flex';
+  window._winnerShown=true;
 }
-
 function init(){
   // URL seed takes priority
   const fromURL=loadFromURL();
