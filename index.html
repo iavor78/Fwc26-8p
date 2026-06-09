@@ -2331,7 +2331,9 @@ function showCalDay(ds){
       ?'<span style="color:#eee;font-weight:700;padding:0 4px">'+m.s1+'-'+m.s2+'</span>'
       :'<span style="color:#555;padding:0 6px">v</span>';
 
+    var phaseLabel=m.phase==='group'?'':KO_ROUNDS.reduce(function(t,r){return r.key===m.phase?r.label.replace('Round of ','R').replace('-Finals','F').replace('Quarter','QF').replace('Semi','SF').replace('3rd Place','3rd').replace('Final','F'):t;},'');
     html+='<div style="display:flex;align-items:center;gap:4px;padding:5px 0;border-top:1px solid #1a1a1a">'
+      +(phaseLabel?'<span style="color:#74b3ce;font-size:9px;width:26px;flex-shrink:0;font-weight:700">'+phaseLabel+'</span>':'<span style="width:26px;flex-shrink:0"></span>')
       +'<span style="color:#888;font-size:10px;width:26px;flex-shrink:0">M'+m.mn+'</span>'
       +'<span style="color:#666;font-size:10px;width:44px;flex-shrink:0">'+m.time+'</span>'
       +'<span style="flex:1;font-size:11px;text-align:right">'+homeStr+'</span>'
