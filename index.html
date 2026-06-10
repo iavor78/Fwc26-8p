@@ -251,21 +251,31 @@ function flagEmoji(team){
 }
 // ── FIFA RANKINGS (April 1, 2026 official) ───────────────────────────────────
 const FIFA_RANK = {
-  // Official FIFA rankings — April 1, 2026 (source: worldcuppass.com / FIFA)
-  "France":1,      "Spain":2,       "Argentina":3,   "England":4,
-  "Portugal":5,    "Brazil":6,      "Netherlands":7,  "Morocco":8,
-  "Belgium":9,     "Germany":10,    "Croatia":11,     "Colombia":13,
-  "Senegal":14,    "Mexico":15,     "USA":16,         "United States":16,
-  "Uruguay":17,    "Japan":18,      "Switzerland":19, "Iran":21,
-  "South Korea":25,"Australia":26,  "Austria":23,     "Ecuador":24,
-  "Egypt":29,      "Canada":30,     "Ivory Coast":33, "Côte d'Ivoire":33,
-  "Qatar":35,      "Algeria":36,    "Sweden":39,      "Tunisia":40,
-  "Czechia":41,    "Turkey":42,     "Norway":44,      "Scotland":47,
-  "DR Congo":51,   "Bosnia & Herzegovina":52, "Bosnia":52,
-  "Panama":53,     "Saudi Arabia":57,"South Africa":60,"Iraq":61,
-  "Uzbekistan":62, "Ghana":64,      "Jordan":68,
-  "Curaçao":82,    "Haiti":83,      "Cape Verde":85,  "New Zealand":85,
-  "Paraguay":54,
+  // Official FIFA live rankings — June 2026
+  // Pot A
+  "Argentina":1,   "Spain":2,       "France":3,      "England":4,
+  "Portugal":5,    "Brazil":6,
+  // Pot B
+  "Morocco":7,     "Netherlands":8,  "Belgium":9,     "Germany":10,
+  "Croatia":11,    "Colombia":13,
+  // Pot C
+  "Mexico":14,     "Senegal":15,    "Uruguay":16,    "USA":17,
+  "United States":17, "Japan":18,   "Switzerland":19,
+  // Pot D
+  "Iran":20,       "Turkey":22,     "Ecuador":23,    "Austria":24,
+  "South Korea":25,"Australia":27,
+  // Pot E
+  "Algeria":28,    "Egypt":29,      "Canada":30,     "Norway":31,
+  "Ivory Coast":33,"Côte d'Ivoire":33, "Panama":34,
+  // Pot F
+  "Sweden":38,     "Czechia":40,    "Paraguay":41,   "Scotland":42,
+  "Tunisia":45,    "DR Congo":46,
+  // Pot G
+  "Uzbekistan":50, "Qatar":56,      "Iraq":57,       "South Africa":60,
+  "Saudi Arabia":61,"Jordan":63,
+  // Pot H
+  "Cape Verde":67, "Bosnia & Herzegovina":64, "Bosnia":64,
+  "Ghana":73,      "Curaçao":82,    "Haiti":83,      "New Zealand":85,
 };
 function rank(team){ return FIFA_RANK[team] || "—"; }
 
