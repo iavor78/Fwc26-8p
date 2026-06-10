@@ -283,85 +283,125 @@ function rank(team){ return FIFA_RANK[team] || "—"; }
 // Format: [matchNum, "YYYY-MM-DD", etHour, etMin, city]
 // CEST = ET + 6 hours
 const MATCH_SCHEDULE = {
-  // GROUP STAGE — official FIFA schedule (ET times)
-  1: ["2026-06-11",15, 0,"Mexico City"],    2: ["2026-06-11",22, 0,"Guadalajara"],
-  3: ["2026-06-12",15, 0,"Toronto"],        4: ["2026-06-12",21, 0,"Los Angeles"],
-  5: ["2026-06-13",21, 0,"Boston"],         6: ["2026-06-13",15, 0,"San Francisco"],
-  7: ["2026-06-13",18, 0,"New Jersey"],     8: ["2026-06-14", 0, 0,"Vancouver"],
-  9: ["2026-06-14",19, 0,"Philadelphia"],   10:["2026-06-14",13, 0,"Houston"],
-  11:["2026-06-14",16, 0,"Dallas"],         12:["2026-06-14",22, 0,"Monterrey"],
-  13:["2026-06-15",18, 0,"Miami"],          14:["2026-06-15",12, 0,"Atlanta"],
-  15:["2026-06-15",21, 0,"Los Angeles"],    16:["2026-06-15",15, 0,"Seattle"],
-  17:["2026-06-16",15, 0,"New Jersey"],     18:["2026-06-16",18, 0,"Boston"],
-  19:["2026-06-16",21, 0,"Kansas City"],    20:["2026-06-17", 0, 0,"San Francisco"],
-  21:["2026-06-17",19, 0,"Toronto"],        22:["2026-06-17",16, 0,"Dallas"],
-  23:["2026-06-17",13, 0,"Houston"],        24:["2026-06-17",22, 0,"Mexico City"],
-  25:["2026-06-18",12, 0,"Atlanta"],        26:["2026-06-18",15, 0,"Los Angeles"],
-  27:["2026-06-18",18, 0,"Vancouver"],      28:["2026-06-18",21, 0,"Guadalajara"],
-  29:["2026-06-19",20,30,"Philadelphia"],   30:["2026-06-19",18, 0,"Boston"],
-  31:["2026-06-19",23, 0,"San Francisco"],  32:["2026-06-19",15, 0,"Seattle"],
-  33:["2026-06-20",16, 0,"Toronto"],        34:["2026-06-20",20, 0,"Kansas City"],
-  35:["2026-06-20",13, 0,"Houston"],        36:["2026-06-21", 0, 0,"Monterrey"],
-  37:["2026-06-21",18, 0,"Miami"],          38:["2026-06-21",12, 0,"Atlanta"],
-  39:["2026-06-21",21, 0,"Vancouver"],      40:["2026-06-21",15, 0,"Los Angeles"],
-  41:["2026-06-22",20, 0,"New Jersey"],     42:["2026-06-22",17, 0,"Philadelphia"],
-  43:["2026-06-22",13, 0,"Dallas"],         44:["2026-06-22",23, 0,"San Francisco"],
-  45:["2026-06-23",16, 0,"Toronto"],        46:["2026-06-23",13, 0,"Boston"],
-  47:["2026-06-23",13, 0,"Houston"],        48:["2026-06-23",22, 0,"Mexico City"],
-  49:["2026-06-24",18, 0,"Miami"],          50:["2026-06-24",18, 0,"Atlanta"],
-  51:["2026-06-24",15, 0,"Vancouver"],      52:["2026-06-24",15, 0,"Seattle"],
-  53:["2026-06-24",21, 0,"Mexico City"],    54:["2026-06-24",21, 0,"Monterrey"],
-  55:["2026-06-25",16, 0,"Philadelphia"],   56:["2026-06-25",16, 0,"New Jersey"],
-  57:["2026-06-25",19, 0,"Dallas"],         58:["2026-06-25",19, 0,"Kansas City"],
-  59:["2026-06-25",22, 0,"Los Angeles"],    60:["2026-06-25",22, 0,"San Francisco"],
-  61:["2026-06-26",15, 0,"Boston"],         62:["2026-06-26",15, 0,"Toronto"],
-  63:["2026-06-26",23, 0,"Los Angeles"],    64:["2026-06-26",23, 0,"Vancouver"],
-  65:["2026-06-26",20, 0,"Houston"],        66:["2026-06-26",20, 0,"Guadalajara"],
-  67:["2026-06-27",17, 0,"Miami"],          68:["2026-06-27",17, 0,"Philadelphia"],
-  69:["2026-06-27",22, 0,"Kansas City"],    70:["2026-06-27",22, 0,"Dallas"],
-  71:["2026-06-27",19,30,"Miami"],          72:["2026-06-27",19,30,"Atlanta"],
-
-  // R32
-  73:["2026-06-28",15, 0,"Los Angeles"],    74:["2026-06-29",16,30,"Boston"],
-  75:["2026-06-29",21, 0,"Monterrey"],      76:["2026-06-29",13, 0,"Houston"],
-  77:["2026-06-30",17, 0,"New Jersey"],     78:["2026-06-30",13, 0,"Dallas"],
-  79:["2026-06-30",21, 0,"Mexico City"],    80:["2026-07-01",12, 0,"Atlanta"],
-  81:["2026-07-01",20, 0,"San Francisco"],  82:["2026-07-01",16, 0,"Seattle"],
-  83:["2026-07-02",19, 0,"Toronto"],        84:["2026-07-02",15, 0,"Los Angeles"],
-  85:["2026-07-02",23, 0,"Vancouver"],      86:["2026-07-03",18, 0,"Miami"],
-  87:["2026-07-03",21,30,"Kansas City"],    88:["2026-07-03",14, 0,"Dallas"],
-  // R16
-  89:["2026-07-04",17, 0,"Philadelphia"],   90:["2026-07-04",13, 0,"Houston"],
-  91:["2026-07-04",16, 0,"New Jersey"],     92:["2026-07-05",20, 0,"Mexico City"],
-  93:["2026-07-05",15, 0,"Seattle"],        94:["2026-07-05",20, 0,"Dallas"],
-  95:["2026-07-06",12, 0,"Boston"],         96:["2026-07-06",16, 0,"Vancouver"],
-  // QF
-  97:["2026-07-09",16, 0,"Boston"],         98:["2026-07-10",15, 0,"Los Angeles"],
-  99:["2026-07-10",21, 0,"Miami"],          100:["2026-07-11",15, 0,"Kansas City"],
-  // SF
-  101:["2026-07-14",15, 0,"Dallas"],        102:["2026-07-15",15, 0,"Atlanta"],
-  // Finals
-  103:["2026-07-18",17, 0,"Miami"],
-  104:["2026-07-19",15, 0,"New Jersey"],
+  // All times in CEST (Central European Summer Time, UTC+2)
+  1:["2026-06-11",21,0,"Mexico City"],
+  2:["2026-06-12",4,0,"Guadalajara"],
+  3:["2026-06-12",21,0,"Toronto"],
+  4:["2026-06-13",3,0,"Los Angeles"],
+  5:["2026-06-14",3,0,"Boston"],
+  6:["2026-06-13",21,0,"San Francisco"],
+  7:["2026-06-14",0,0,"New Jersey"],
+  8:["2026-06-14",6,0,"Vancouver"],
+  9:["2026-06-15",1,0,"Philadelphia"],
+  10:["2026-06-14",19,0,"Houston"],
+  11:["2026-06-14",22,0,"Dallas"],
+  12:["2026-06-15",4,0,"Monterrey"],
+  13:["2026-06-16",0,0,"Miami"],
+  14:["2026-06-15",18,0,"Atlanta"],
+  15:["2026-06-16",3,0,"Los Angeles"],
+  16:["2026-06-15",21,0,"Seattle"],
+  17:["2026-06-16",21,0,"New Jersey"],
+  18:["2026-06-17",0,0,"Boston"],
+  19:["2026-06-17",3,0,"Kansas City"],
+  20:["2026-06-17",6,0,"San Francisco"],
+  21:["2026-06-18",1,0,"Toronto"],
+  22:["2026-06-17",22,0,"Dallas"],
+  23:["2026-06-17",19,0,"Houston"],
+  24:["2026-06-18",4,0,"Mexico City"],
+  25:["2026-06-18",18,0,"Atlanta"],
+  26:["2026-06-18",21,0,"Los Angeles"],
+  27:["2026-06-19",0,0,"Vancouver"],
+  28:["2026-06-19",3,0,"Guadalajara"],
+  29:["2026-06-20",2,30,"Philadelphia"],
+  30:["2026-06-20",0,0,"Boston"],
+  31:["2026-06-20",5,0,"San Francisco"],
+  32:["2026-06-19",21,0,"Seattle"],
+  33:["2026-06-20",22,0,"Toronto"],
+  34:["2026-06-21",2,0,"Kansas City"],
+  35:["2026-06-20",19,0,"Houston"],
+  36:["2026-06-21",6,0,"Monterrey"],
+  37:["2026-06-22",0,0,"Miami"],
+  38:["2026-06-21",18,0,"Atlanta"],
+  39:["2026-06-22",3,0,"Vancouver"],
+  40:["2026-06-21",21,0,"Los Angeles"],
+  41:["2026-06-23",2,0,"New Jersey"],
+  42:["2026-06-22",23,0,"Philadelphia"],
+  43:["2026-06-22",19,0,"Dallas"],
+  44:["2026-06-23",5,0,"San Francisco"],
+  45:["2026-06-23",22,0,"Toronto"],
+  46:["2026-06-23",19,0,"Boston"],
+  47:["2026-06-23",19,0,"Houston"],
+  48:["2026-06-24",4,0,"Mexico City"],
+  49:["2026-06-25",0,0,"Miami"],
+  50:["2026-06-25",0,0,"Atlanta"],
+  51:["2026-06-24",21,0,"Vancouver"],
+  52:["2026-06-24",21,0,"Seattle"],
+  53:["2026-06-25",3,0,"Mexico City"],
+  54:["2026-06-25",3,0,"Monterrey"],
+  55:["2026-06-25",22,0,"Philadelphia"],
+  56:["2026-06-25",22,0,"New Jersey"],
+  57:["2026-06-26",1,0,"Dallas"],
+  58:["2026-06-26",1,0,"Kansas City"],
+  59:["2026-06-26",4,0,"Los Angeles"],
+  60:["2026-06-26",4,0,"San Francisco"],
+  61:["2026-06-26",21,0,"Boston"],
+  62:["2026-06-26",21,0,"Toronto"],
+  63:["2026-06-27",5,0,"Los Angeles"],
+  64:["2026-06-27",5,0,"Vancouver"],
+  65:["2026-06-27",2,0,"Houston"],
+  66:["2026-06-27",2,0,"Guadalajara"],
+  67:["2026-06-27",23,0,"Miami"],
+  68:["2026-06-27",23,0,"Philadelphia"],
+  69:["2026-06-28",4,0,"Kansas City"],
+  70:["2026-06-28",4,0,"Dallas"],
+  71:["2026-06-28",1,30,"Miami"],
+  72:["2026-06-28",1,30,"Atlanta"],
+  73:["2026-06-28",21,0,"Los Angeles"],
+  74:["2026-06-29",22,30,"Boston"],
+  75:["2026-06-30",3,0,"Monterrey"],
+  76:["2026-06-29",19,0,"Houston"],
+  77:["2026-06-30",23,0,"New Jersey"],
+  78:["2026-06-30",19,0,"Dallas"],
+  79:["2026-07-01",3,0,"Mexico City"],
+  80:["2026-07-01",18,0,"Atlanta"],
+  81:["2026-07-02",2,0,"San Francisco"],
+  82:["2026-07-01",22,0,"Seattle"],
+  83:["2026-07-03",1,0,"Toronto"],
+  84:["2026-07-02",21,0,"Los Angeles"],
+  85:["2026-07-03",5,0,"Vancouver"],
+  86:["2026-07-04",0,0,"Miami"],
+  87:["2026-07-04",3,30,"Kansas City"],
+  88:["2026-07-03",20,0,"Dallas"],
+  89:["2026-07-04",23,0,"Philadelphia"],
+  90:["2026-07-04",19,0,"Houston"],
+  91:["2026-07-04",22,0,"New Jersey"],
+  92:["2026-07-06",2,0,"Mexico City"],
+  93:["2026-07-05",21,0,"Seattle"],
+  94:["2026-07-06",2,0,"Dallas"],
+  95:["2026-07-06",18,0,"Boston"],
+  96:["2026-07-06",22,0,"Vancouver"],
+  97:["2026-07-09",22,0,"Boston"],
+  98:["2026-07-10",21,0,"Los Angeles"],
+  99:["2026-07-11",3,0,"Miami"],
+  100:["2026-07-11",21,0,"Kansas City"],
+  101:["2026-07-14",21,0,"Dallas"],
+  102:["2026-07-15",21,0,"Atlanta"],
+  103:["2026-07-18",23,0,"Miami"],
+  104:["2026-07-19",21,0,"New Jersey"],
 };
 
 function getMatchInfo(matchNum) {
   const s = MATCH_SCHEDULE[matchNum];
   if (!s) return null;
-  const [date, etH, etM, city] = s;
-  // Convert ET to CEST (+6h)
-  const etDate = new Date(date + "T" + String(etH).padStart(2,"0") + ":" + String(etM).padStart(2,"0") + ":00-05:00");
-  // Use fixed offset: ET is UTC-5 (EDT), CEST is UTC+2, diff = +7
-  // Actually ET during summer = EDT = UTC-4, CEST = UTC+2, diff = +6
-  const cestDate = new Date(etDate.getTime() + 6 * 3600000);
+  const [date, h, m, city] = s;
   const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
   const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const dayStr = days[cestDate.getUTCDay()];
-  const dateStr = `${dayStr} ${cestDate.getUTCDate()} ${months[cestDate.getUTCMonth()]}`;
-  const timeStr = `${String(cestDate.getUTCHours()).padStart(2,"0")}:${String(cestDate.getUTCMinutes()).padStart(2,"0")} CEST`;
+  const d = new Date(date + "T12:00:00Z"); // noon UTC to avoid timezone shifts
+  const dayStr = days[d.getUTCDay()];
+  const dateStr = `${dayStr} ${d.getUTCDate()} ${months[d.getUTCMonth()]}`;
+  const timeStr = `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")} CEST`;
   return { dateStr, timeStr, city };
 }
-
 const PLAYER_COLORS=["#e63946","#2a9d8f","#e9c46a","#a78bfa","#f4a261","#57cc99","#74b3ce","#c77dff"];
 const KO_ROUNDS=[
   {key:"r32",  label:"Round of 32",     slots:4, matchNums:[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88]},
@@ -2253,16 +2293,16 @@ function toggleCalendar(){
   var el=document.getElementById('matchCal');
   if(!el) return;
   if(el.style.display==='none'||!el.style.display){
-    el.style.display='block'; drawCalendar();
+    el.style.display='block'; drawCalendar(null);
   } else { el.style.display='none'; }
 }
 
-function drawCalendar(){
+function drawCalendar(selectedDs){
   var el=document.getElementById('matchCal');
   if(!el) return;
   var byDate=buildDateMap();
   var html='<div style="background:#111;border:1px solid #222;border-radius:10px;padding:12px;margin-bottom:12px">';
-  html+='<div style="font-size:11px;color:#eee;letter-spacing:1px;text-align:center;margin-bottom:10px">TAP A DATE TO SEE MATCHES</div>';
+  html+='<div style="font-size:11px;color:#eee;letter-spacing:1px;text-align:center;margin-bottom:10px">TAP A DATE TO SEE MATCHES — times in CEST</div>';
   html+='<div style="display:flex;gap:12px;flex-wrap:wrap">';
   [{y:2026,m:5,n:'JUNE'},{y:2026,m:6,n:'JULY'}].forEach(function(mo){
     html+='<div style="flex:1;min-width:130px">';
@@ -2277,30 +2317,33 @@ function drawCalendar(){
       var ms=byDate[ds]||[];
       var has=ms.length>0;
       var done=has&&ms.every(function(x){return x.played;});
-      var bg=has?(done?'#1a2a1a':'#1a1a2a'):'transparent';
-      var fg=has?(done?'#2a9d8f':'#74b3ce'):'#555';
-      var bd=has?'1px solid '+(done?'#2a4a2a':'#2a2a4a'):'1px solid transparent';
-      // Use data-ds attribute — event delegation handles the click
-      html+='<div style="font-size:9px;text-align:center;padding:4px 1px;border-radius:3px;background:'+bg+';color:'+fg+';border:'+bd+';cursor:'+(has?'pointer':'default')+'"'
+      var isSel=ds===selectedDs;
+      var bg=isSel?'#e9c46a':(has?(done?'#1a2a1a':'#1a1a2a'):'transparent');
+      var fg=isSel?'#000':(has?(done?'#2a9d8f':'#74b3ce'):'#555');
+      var bd=isSel?'1px solid #e9c46a':(has?'1px solid '+(done?'#2a4a2a':'#2a2a4a'):'1px solid transparent');
+      var fw=isSel?'bold':'normal';
+      html+='<div style="font-size:9px;text-align:center;padding:4px 1px;border-radius:3px;background:'+bg+';color:'+fg+';border:'+bd+';font-weight:'+fw+';cursor:'+(has?'pointer':'default')+'"'
         +(has?' data-ds="'+ds+'"':'')
         +'>'+d+'</div>';
     }
     html+='</div></div>';
   });
-  html+='</div><div id="calDay" style="display:none;margin-top:10px;border-top:1px solid #222;padding-top:8px"></div></div>';
+  html+='</div><div id="calDay" style="'+(selectedDs?'':'display:none;')+'margin-top:10px;border-top:1px solid #222;padding-top:8px"></div></div>';
   el.innerHTML=html;
 
-  // Attach click via event delegation on the container (works on all mobile browsers)
-  el.addEventListener('click', function(e){
-    var target=e.target;
-    while(target && target!==el){
-      if(target.dataset && target.dataset.ds){
-        showCalDay(target.dataset.ds);
+  el.addEventListener('click',function(e){
+    var t=e.target;
+    while(t&&t!==el){
+      if(t.dataset&&t.dataset.ds){
+        drawCalendar(t.dataset.ds);
+        showCalDay(t.dataset.ds);
         return;
       }
-      target=target.parentElement;
+      t=t.parentElement;
     }
   });
+
+  if(selectedDs) showCalDay(selectedDs);
 }
 
 function showCalDay(ds){
