@@ -1477,6 +1477,7 @@ function renderGroupDraw(){
       <span class="player-dot" style="background:${PLAYER_COLORS[pi]}"></span>
       <span style="width:72px;font-size:12px;font-weight:700;color:${PLAYER_COLORS[pi]};flex-shrink:0">${esc(name)}</span>
       <span style="font-size:10px;color:#bbb">${myGroups.length}/6 groups</span>
+      ${myGroups.length===6?`<span style="font-size:10px;color:#888">(avg #${(myTeams.reduce((s,t)=>s+rank(t),0)/myTeams.length).toFixed(1)})</span>`:''}
       <div class="flex flex-wrap gap4">${myTeams.map(t=>`<span style="font-size:10px;background:#1a1a1a;border-radius:4px;padding:2px 6px;color:#ccc">${flag(t)} ${esc(t)}</span>`).join("")}</div>
     </div>`;
   });
