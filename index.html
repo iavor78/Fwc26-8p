@@ -1803,6 +1803,89 @@ function renderKOMatches(phase){
 }
 
 // ── PLAYERS ───────────────────────────────────────────────────────────────────
+function buildPlayerFixtures(pi){
+  var fixtures=[];
+  // Group stage
+  GROUP_KEYS.forEach(function(g){
+    var mySlot=S.groupDraw[g]?S.groupDraw[g][pi]:undefined;
+    if(mySlot===undefined||mySlot===null||mySlot<0) return;
+    var myTeam=GROUPS[g][mySlot];
+    if(!myTeam) return;
+    (S.groupMatches[g]||[]).forEach(function(m){
+      var isHome=(m.home===mySlot), isAway=(m.away===mySlot);
+      if(!isHome&&!isAway) return;
+      var oppSlot=isHome?m.away:m.home;
+      var oppTeam=GROUPS[g][oppSlot];
+      var oppPi=-1;
+      for(var p=0;p<8;p++){
+        if(p!==pi&&S.groupDraw[g]&&S.groupDraw[g][p]===oppSlot){oppPi=p;break;}
+      }
+      var sched=MATCH_SCHEDULE[m.matchNum]||[];
+      fixtures.push({mn:m.matchNum,date:sched[0]||'',myTeam:myTeam,oppTeam:oppTeam,oppPi:oppPi,
+        played:m.played,myGoals:isHome?m.homeGoals:m.awayGoals,oppGoals:isHome?m.awayGoals:m.homeGoals,phase:'group'});
+    });
+  });
+  // KO rounds
+  KO_ROUNDS.forEach(function(r){
+    var lookupKey=(r.key==='sf'||r.key==='third'||r.key==='final')?'qf':r.key;
+    var myTeams=(S.koDraw[lookupKey]&&S.koDraw[lookupKey][pi]||[]).filter(Boolean);
+    (S.koMatches[r.key]||[]).forEach(function(m){
+      var myTeam=myTeams.find(function(t){return m.team1===t||m.team2===t;});
+      if(!myTeam) return;
+      var isTeam1=m.team1===myTeam;
+      var oppTeam=isTeam1?m.team2:m.team1;
+      var oppPi=-1;
+      if(oppTeam){
+        for(var p=0;p<8;p++){
+          if(p!==pi&&(S.koDraw[lookupKey][p]||[]).includes(oppTeam)){oppPi=p;break;}
+        }
+      }
+      var sched=MATCH_SCHEDULE[m.matchNum]||[];
+      fixtures.push({mn:m.matchNum,date:sched[0]||'',myTeam:myTeam,oppTeam:oppTeam||null,oppPi:oppPi,
+        played:m.played,myGoals:isTeam1?m.goals1:m.goals2,oppGoals:isTeam1?m.goals2:m.goals1,phase:r.key});
+    });
+  });
+  fixtures.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:a.mn-b.mn;});
+  return fixtures;
+}
+
+function renderPlayerFixtures(pi){
+  var fixtures=buildPlayerFixtures(pi);
+  if(!fixtures.length) return '';
+  var pCol=PLAYER_COLORS[pi];
+  var html='<div style="margin-top:10px;border-top:1px solid #1a1a1a;padding-top:8px">';
+  var lastDate='';
+  fixtures.forEach(function(f){
+    if(f.date&&f.date!==lastDate){
+      lastDate=f.date;
+      var d=new Date(f.date+'T12:00:00Z');
+      var dl=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+      html+='<div style="font-size:9px;color:#666;letter-spacing:1px;padding:5px 0 2px;margin-top:2px">'+dl+'</div>';
+    }
+    var oppName=f.oppPi>=0?S.playerNames[f.oppPi]:'?';
+    var oppCol=f.oppPi>=0?PLAYER_COLORS[f.oppPi]:'#555';
+    var oppStr=f.oppTeam?(flag(f.oppTeam)+' <span style="color:#bbb">'+esc(f.oppTeam)+'</span>'):'<span style="color:#444">TBD</span>';
+    var scoreStr='';
+    if(f.played&&f.myGoals!==''&&f.myGoals!==undefined){
+      var mg=parseInt(f.myGoals),og=parseInt(f.oppGoals);
+      var res=mg>og?'W':mg<og?'L':'D';
+      var rc=res==='W'?'#2a9d8f':res==='L'?'#e63946':'#e9c46a';
+      scoreStr='<span style="color:'+rc+';font-weight:700;font-size:11px;margin-left:auto;flex-shrink:0;padding-left:6px">'+res+' '+mg+'-'+og+'</span>';
+    } else {
+      scoreStr='<span style="color:#333;font-size:9px;margin-left:auto;flex-shrink:0;padding-left:6px">M'+f.mn+'</span>';
+    }
+    html+='<div style="display:flex;align-items:center;gap:4px;padding:3px 0;border-top:1px solid #0f0f0f;flex-wrap:nowrap;overflow:hidden">'
+      +'<span style="font-size:10px;color:'+pCol+';flex-shrink:0;white-space:nowrap">'+flag(f.myTeam)+' '+esc(f.myTeam)+'</span>'
+      +'<span style="font-size:10px;color:#333;flex-shrink:0"> v </span>'
+      +'<span style="font-size:10px;flex-shrink:0;white-space:nowrap">'+oppStr+'</span>'
+      +'<span style="font-size:9px;color:'+oppCol+';flex-shrink:0;white-space:nowrap"> ('+esc(oppName)+')</span>'
+      +scoreStr
+      +'</div>';
+  });
+  html+='</div>';
+  return html;
+}
+
 function renderPlayers(){
   let h=`<div class="section-label">Edit Player Names</div>`;
   S.playerNames.forEach((name,i)=>{
