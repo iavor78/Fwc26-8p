@@ -1853,14 +1853,14 @@ function renderPlayerFixtures(pi){
   var fixtures=buildPlayerFixtures(pi);
   if(!fixtures.length) return '';
   var pCol=PLAYER_COLORS[pi];
-  var html='<div style="margin-top:10px;border-top:1px solid #1a1a1a;padding-top:8px">';
+  var inner='';
   var lastDate='';
   fixtures.forEach(function(f){
     if(f.date&&f.date!==lastDate){
       lastDate=f.date;
       var d=new Date(f.date+'T12:00:00Z');
       var dl=d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
-      html+='<div style="font-size:9px;color:#666;letter-spacing:1px;padding:5px 0 2px;margin-top:2px">'+dl+'</div>';
+      inner+='<div style="font-size:9px;color:#666;letter-spacing:1px;padding:5px 0 2px;margin-top:2px">'+dl+'</div>';
     }
     var oppName=f.oppPi>=0?S.playerNames[f.oppPi]:'?';
     var oppCol=f.oppPi>=0?PLAYER_COLORS[f.oppPi]:'#555';
@@ -1874,7 +1874,7 @@ function renderPlayerFixtures(pi){
     } else {
       scoreStr='<span style="color:#333;font-size:9px;margin-left:auto;flex-shrink:0;padding-left:6px">M'+f.mn+'</span>';
     }
-    html+='<div style="display:flex;align-items:center;gap:4px;padding:3px 0;border-top:1px solid #0f0f0f;flex-wrap:nowrap;overflow:hidden">'
+    inner+='<div style="display:flex;align-items:center;gap:4px;padding:3px 0;border-top:1px solid #0f0f0f;flex-wrap:nowrap;overflow:hidden">'
       +'<span style="font-size:10px;color:'+pCol+';flex-shrink:0;white-space:nowrap">'+flag(f.myTeam)+' '+esc(f.myTeam)+'</span>'
       +'<span style="font-size:10px;color:#333;flex-shrink:0"> v </span>'
       +'<span style="font-size:10px;flex-shrink:0;white-space:nowrap">'+oppStr+'</span>'
@@ -1882,8 +1882,28 @@ function renderPlayerFixtures(pi){
       +scoreStr
       +'</div>';
   });
-  html+='</div>';
-  return html;
+
+  var played=fixtures.filter(function(f){return f.played;}).length;
+  var countLabel=fixtures.length+' fixtures'+(played?' · '+played+' played':'');
+
+  return '<div style="margin-top:8px;border-top:1px solid #1a1a1a;padding-top:6px">'
+    +'<button id="pfxbtn'+pi+'" onclick="toggleFixtures('+pi+')" '
+    +'style="background:none;border:none;color:#555;font-size:10px;cursor:pointer;padding:2px 0;letter-spacing:.5px">'
+    +'▶ '+countLabel
+    +'</button>'
+    +'<div id="pfx'+pi+'" style="display:none">'
+    +inner
+    +'</div>'
+    +'</div>';
+}
+
+function toggleFixtures(pi){
+  var el=document.getElementById('pfx'+pi);
+  var btn=document.getElementById('pfxbtn'+pi);
+  if(!el) return;
+  var open=el.style.display!=='none';
+  el.style.display=open?'none':'block';
+  if(btn) btn.textContent=open?'▶ fixtures':'▼ fixtures';
 }
 
 function renderPlayers(){
