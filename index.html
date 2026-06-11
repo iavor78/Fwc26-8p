@@ -1806,12 +1806,16 @@ function renderKOMatches(phase){
 function renderPlayers(){
   let h=`<div class="section-label">Edit Player Names</div>`;
   S.playerNames.forEach((name,i)=>{
-    h+=`<div class="card flex items-center gap10">
-      <span class="player-dot" style="background:${PLAYER_COLORS[i]};box-shadow:0 0 8px ${PLAYER_COLORS[i]}66;width:12px;height:12px"></span>
-      <input type="text" value="${esc(name)}" maxlength="20" id="pname${i}"
-        style="flex:1;background:#1a1a1a;border:1px solid #444;color:${PLAYER_COLORS[i]};padding:8px 10px;border-radius:8px;font-size:14px;font-weight:700"
-        onblur="update(s=>{s.playerNames[${i}]=this.value.trim()||'Player ${i+1}'})"
-        onkeydown="if(event.key==='Enter'){this.blur()}">
+    const pfix=renderPlayerFixtures(i);
+    h+=`<div class="card">
+      <div class="flex items-center gap10">
+        <span class="player-dot" style="background:${PLAYER_COLORS[i]};box-shadow:0 0 8px ${PLAYER_COLORS[i]}66;width:12px;height:12px"></span>
+        <input type="text" value="${esc(name)}" maxlength="20" id="pname${i}"
+          style="flex:1;background:#1a1a1a;border:1px solid #444;color:${PLAYER_COLORS[i]};padding:8px 10px;border-radius:8px;font-size:14px;font-weight:700"
+          onblur="update(s=>{s.playerNames[${i}]=this.value.trim()||'Player ${i+1}'})"
+          onkeydown="if(event.key==='Enter'){this.blur()}">
+      </div>
+      ${pfix}
     </div>`;
   });
 
