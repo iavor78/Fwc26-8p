@@ -1048,39 +1048,57 @@ function getKOQualifiers(){
 function renderTable(){
   const rows=computeTable();
   let h=`<div style="font-size:10px;color:#FFF;text-align:center;letter-spacing:1px;margin-bottom:14px">SPECIAL SUPER LEAGUE · 8 PLAYERS · 48 TEAMS · 104 MATCHES</div>`;
-  h+=`<div class="card" style="padding:0;overflow:hidden"><table style="width:100%;border-collapse:collapse">`;
-  h+=`<thead><tr style="font-size:9px;color:#888;letter-spacing:1px">
-    <th style="text-align:left;padding:6px 12px;font-weight:400">#</th>
-    <th style="text-align:left;padding:6px 4px;font-weight:400">PLAYER</th>
-    <th style="padding:6px 5px;font-weight:400">P</th>
-    <th style="padding:6px 5px;font-weight:400">W</th>
-    <th style="padding:6px 5px;font-weight:400">D</th>
-    <th style="padding:6px 5px;font-weight:400">L</th>
-    <th style="padding:6px 5px;font-weight:400">GD</th>
-    <th style="padding:6px 5px;font-weight:400">GF</th>
-    <th style="padding:6px 5px;font-weight:400">GA</th>
-    <th style="padding:6px 8px;font-weight:400">PTS</th>
-  </tr></thead><tbody>`;
+  h+=`<div class="card" style="padding:0;overflow:hidden">
+  <table style="width:100%;border-collapse:collapse;table-layout:fixed">
+    <colgroup>
+      <col style="width:32px">
+      <col>
+      <col style="width:28px">
+      <col style="width:28px">
+      <col style="width:28px">
+      <col style="width:28px">
+      <col style="width:36px">
+      <col style="width:28px">
+      <col style="width:28px">
+      <col style="width:36px">
+    </colgroup>
+    <thead><tr style="font-size:9px;color:#888;letter-spacing:1px;background:#0a0a0a">
+      <th style="padding:6px 4px 6px 10px;font-weight:400;text-align:center">#</th>
+      <th style="padding:6px 4px;font-weight:400;text-align:left">PLAYER</th>
+      <th style="padding:6px 2px;font-weight:400;text-align:center">P</th>
+      <th style="padding:6px 2px;font-weight:400;text-align:center">W</th>
+      <th style="padding:6px 2px;font-weight:400;text-align:center">D</th>
+      <th style="padding:6px 2px;font-weight:400;text-align:center">L</th>
+      <th style="padding:6px 2px;font-weight:400;text-align:center">GD</th>
+      <th style="padding:6px 2px;font-weight:400;text-align:center">GF</th>
+      <th style="padding:6px 2px;font-weight:400;text-align:center">GA</th>
+      <th style="padding:6px 6px 6px 2px;font-weight:400;text-align:center">PTS</th>
+    </tr></thead>
+    <tbody>`;
   const medals=["🥇","🥈","🥉","","","","",""];
   rows.forEach((r,i)=>{
     const pi=S.playerNames.indexOf(r.name);
     const col=pi>=0?PLAYER_COLORS[pi]:"#aaa";
+    const gdCol=r.gd>0?"#2a9d8f":r.gd<0?"#e63946":"#ddd";
+    const td="text-align:center;padding:7px 2px;font-size:11px;white-space:nowrap;color:#ddd";
     h+=`<tr style="border-top:1px solid #111">
-      <td style="padding:8px 10px 8px 12px;border-left:2px solid ${col}">
-        <span style="font-size:13px">${medals[i]||""}</span>
+      <td style="padding:7px 4px 7px 10px;text-align:center;border-left:2px solid ${col}">
+        <span style="font-size:12px">${medals[i]||""}</span>
       </td>
-      <td style="padding:8px 4px"><div style="display:flex;align-items:center;gap:6px">
-        <span class="player-dot" style="background:${col}"></span>
-        <span style="font-size:13px;font-weight:700;color:${col}">${esc(r.name)}</span>
-      </div></td>
-      <td style="text-align:center;padding:8px 5px;font-size:11px;color:#ddd">${r.played}</td>
-      <td style="text-align:center;padding:8px 5px;font-size:11px;color:#ddd">${r.won}</td>
-      <td style="text-align:center;padding:8px 5px;font-size:11px;color:#ddd">${r.drawn}</td>
-      <td style="text-align:center;padding:8px 5px;font-size:11px;color:#ddd">${r.lost}</td>
-      <td style="text-align:center;padding:8px 5px;font-size:11px;color:${r.gd>0?"#2a9d8f":r.gd<0?"#e63946":"#ddd"}">${r.gd>0?"+":""}${r.gd}</td>
-      <td style="text-align:center;padding:8px 5px;font-size:11px;color:#ddd">${r.gf}</td>
-      <td style="text-align:center;padding:8px 5px;font-size:11px;color:#ddd">${r.ga}</td>
-      <td style="text-align:center;padding:8px 8px;font-size:14px;font-weight:700;color:${col}">${r.pts}</td>
+      <td style="padding:7px 4px;overflow:hidden">
+        <div style="display:flex;align-items:center;gap:5px;overflow:hidden">
+          <span class="player-dot" style="background:${col};flex-shrink:0"></span>
+          <span style="font-size:12px;font-weight:700;color:${col};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(r.name)}</span>
+        </div>
+      </td>
+      <td style="${td}">${r.played}</td>
+      <td style="${td}">${r.won}</td>
+      <td style="${td}">${r.drawn}</td>
+      <td style="${td}">${r.lost}</td>
+      <td style="${td};color:${gdCol}">${r.gd>0?"+":""}${r.gd}</td>
+      <td style="${td}">${r.gf}</td>
+      <td style="${td}">${r.ga}</td>
+      <td style="text-align:center;padding:7px 6px 7px 2px;font-size:14px;font-weight:700;white-space:nowrap;color:${col}">${r.pts}</td>
     </tr>`;
   });
   h+=`</tbody></table></div>`;
@@ -2294,7 +2312,23 @@ function toggleCalendar(){
   var el=document.getElementById('matchCal');
   if(!el) return;
   if(el.style.display==='none'||!el.style.display){
-    el.style.display='block'; drawCalendar(null);
+    el.style.display='block';
+    // Attach click listener once only
+    if(!el._calListenerAttached){
+      el._calListenerAttached=true;
+      el.addEventListener('click',function(e){
+        var t=e.target;
+        while(t&&t!==el){
+          if(t.dataset&&t.dataset.ds){
+            drawCalendar(t.dataset.ds);
+            showCalDay(t.dataset.ds);
+            return;
+          }
+          t=t.parentElement;
+        }
+      });
+    }
+    drawCalendar(null);
   } else { el.style.display='none'; }
 }
 
