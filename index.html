@@ -2332,17 +2332,17 @@ function drawCalendar(selectedDs){
   html+='</div><div id="calDay" style="'+(selectedDs?'':'display:none;')+'margin-top:10px;border-top:1px solid #222;padding-top:8px"></div></div>';
   el.innerHTML=html;
 
-  el.addEventListener('click',function(e){
+  // Listener attached once via el.onclick (not addEventListener) — no accumulation
+  el.onclick=function(e){
     var t=e.target;
     while(t&&t!==el){
       if(t.dataset&&t.dataset.ds){
         drawCalendar(t.dataset.ds);
-        showCalDay(t.dataset.ds);
         return;
       }
       t=t.parentElement;
     }
-  });
+  };
 
   if(selectedDs) showCalDay(selectedDs);
 }
