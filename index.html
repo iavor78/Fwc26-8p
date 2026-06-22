@@ -628,10 +628,12 @@ const SF_PATHS = [
 const FINAL_PATHS = { third: [103, 101, 102], final: [104, 101, 102] };
 
 function getGroupStandings(g) {
-  // Returns sorted array of {team, pts, gd, gf, played} for a group
   const teams = GROUPS[g];
-  const stats = teams.map(t => ({team:t, pts:0, gd:0, gf:0, ga:0, played:0}));
-  S.groupMatches[g].forEach(m => {
+  const stats = teams.map(t => ({team:t, pts:0, gd:0, gf:0, ga:0, played:0, slot:teams.indexOf(t)}));
+  const matches = S.groupMatches[g];
+
+  // Build overall stats
+  matches.forEach(m => {
     if(!m.played) return;
     const hg=parseInt(m.homeGoals), ag=parseInt(m.awayGoals);
     if(isNaN(hg)||isNaN(ag)) return;
@@ -639,7 +641,54 @@ function getGroupStandings(g) {
     hs.played++; hs.gf+=hg; hs.ga+=ag; hs.gd+=hg-ag; hs.pts+=pts(hg,ag);
     as_.played++; as_.gf+=ag; as_.ga+=hg; as_.gd+=ag-hg; as_.pts+=pts(ag,hg);
   });
-  return stats.sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf||a.team.localeCompare(b.team));
+
+  // Head-to-head stats for a subset of teams
+  function h2h(subset) {
+    const h = {};
+    subset.forEach(s => { h[s.slot]={pts:0,gd:0,gf:0}; });
+    const slots = new Set(subset.map(s=>s.slot));
+    matches.forEach(m => {
+      if(!m.played) return;
+      if(!slots.has(m.home)||!slots.has(m.away)) return;
+      const hg=parseInt(m.homeGoals), ag=parseInt(m.awayGoals);
+      if(isNaN(hg)||isNaN(ag)) return;
+      h[m.home].pts+=pts(hg,ag); h[m.home].gd+=hg-ag; h[m.home].gf+=hg;
+      h[m.away].pts+=pts(ag,hg); h[m.away].gd+=ag-hg; h[m.away].gf+=ag;
+    });
+    return h;
+  }
+
+  // Sort with FIFA tiebreakers: pts → h2h pts → h2h gd → h2h gf → overall gd → overall gf
+  function sortGroup(arr) {
+    if(arr.length<=1) return arr;
+    arr.sort((a,b)=>b.pts-a.pts);
+
+    // Find groups of tied teams and apply h2h within each group
+    let result=[], i=0;
+    while(i<arr.length){
+      let j=i+1;
+      while(j<arr.length&&arr[j].pts===arr[i].pts) j++;
+      const tied=arr.slice(i,j);
+      if(tied.length>1){
+        const hh=h2h(tied);
+        tied.sort((a,b)=>{
+          const ha=hh[a.slot], hb=hh[b.slot];
+          return b.pts-a.pts  // overall pts (same, but keep)
+            || hb.pts-ha.pts  // h2h pts
+            || hb.gd-ha.gd   // h2h gd
+            || hb.gf-ha.gf   // h2h gf
+            || b.gd-a.gd     // overall gd
+            || b.gf-a.gf     // overall gf
+            || a.team.localeCompare(b.team);
+        });
+      }
+      result=result.concat(tied);
+      i=j;
+    }
+    return result;
+  }
+
+  return sortGroup(stats);
 }
 
 function getGroupFinisher(src) {
