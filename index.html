@@ -424,7 +424,7 @@ function initState() {
     koDraw[r.key]=[[],[],[],[],[],[],[],[]];
     koMatches[r.key]=r.matchNums.map(n=>({matchNum:n,team1:"",team2:"",goals1:"",goals2:"",penWinner:"",played:false}));
   });
-  return {playerNames:["Player 1","Player 2","Player 3","Player 4","Player 5","Player 6","Player 7","Player 8"],koQualifiers:[],groupDraw,groupMatches,koDraw,koMatches,activeTab:"table",activeGroup:"A",activeKOPhase:"r32",activeMatchPhase:"group",locked:false};
+  return {playerNames:["Player 1","Player 2","Player 3","Player 4","Player 5","Player 6","Player 7","Player 8"],koQualifiers:[], third3Override:null,groupDraw,groupMatches,koDraw,koMatches,activeTab:"table",activeGroup:"A",activeKOPhase:"r32",activeMatchPhase:"group",locked:false};
 }
 
 let S = initState();
@@ -703,8 +703,9 @@ function getGroupFinisher(src) {
 }
 
 function getBest3rdPlaced() {
-  // Collect all 3rd-placed teams, rank by FIFA WC2026 tiebreaker:
-  // pts → gd → gf → goals against (fewer=better) → FIFA ranking (lower=better)
+  // If admin has set a manual override order, use it
+  if(S.third3Override && S.third3Override.length===8) return S.third3Override;
+  // Auto-rank: pts → gd → gf → ga → FIFA ranking
   const thirds = GROUP_KEYS.map(g => {
     const allPlayed = S.groupMatches[g].every(m=>m.played);
     if(!allPlayed) return null;
@@ -1066,6 +1067,25 @@ function renderGroups(){
     }
   }
   h += `</div>`;
+  // Manual reorder UI — shown only when all 12 groups complete and locked
+  if(allThirds.length===12 && !S.locked){
+    const cur = (S.third3Override&&S.third3Override.length===8) ? S.third3Override : allThirds.slice(0,8).map(t=>t.team);
+    h += `<div style="margin-top:12px;background:#0d1a12;border:1px solid #1a3a22;border-radius:8px;padding:10px 12px">`;
+    h += `<div style="font-size:10px;color:#2a9d8f;letter-spacing:1px;margin-bottom:8px;font-weight:700">⚙ MANUAL 3RD PLACE ORDER <span style="color:#555;font-weight:400">(drag or use ↑↓ to reorder)</span></div>`;
+    cur.forEach((team, i) => {
+      const pi = getOwnerIndex(team);
+      const col = pi>=0 ? PLAYER_COLORS[pi] : '#aaa';
+      h += `<div style="display:flex;align-items:center;gap:8px;padding:4px 0;border-top:1px solid #111">`;
+      h += `<span style="font-size:11px;color:#555;width:16px">${i+1}</span>`;
+      h += `<span style="font-size:11px;color:${col};flex:1">${flag(team)} ${esc(team)}</span>`;
+      h += `<div style="display:flex;gap:4px">`;
+      if(i>0) h += `<button onclick="moveThird3(${i},-1)" style="background:#1a2a1a;border:1px solid #2a3a2a;color:#2a9d8f;border-radius:4px;padding:2px 8px;font-size:12px;cursor:pointer">↑</button>`;
+      if(i<7) h += `<button onclick="moveThird3(${i},+1)" style="background:#1a2a1a;border:1px solid #2a3a2a;color:#2a9d8f;border-radius:4px;padding:2px 8px;font-size:12px;cursor:pointer">↓</button>`;
+      h += `</div></div>`;
+    });
+    if(S.third3Override) h += `<button onclick="resetThird3()" style="margin-top:8px;background:#1a0000;border:1px solid #3a0000;color:#e63946;border-radius:4px;padding:3px 10px;font-size:10px;cursor:pointer">Reset to auto</button>`;
+    h += `</div>`;
+  }
   h += `<div style="margin-top:20px;font-size:10px;color:#fff;text-align:center;letter-spacing:1px">✓R32 = qualified · ✓3rd = best third · W=3 · D=1 · L=0</div>`;
   return h;
 }
@@ -2636,6 +2656,24 @@ function checkWinner(){
   popup.style.display='flex';
   window._winnerShown=true;
 }
+function moveThird3(idx, dir){
+  if(!requireAdmin()) return;
+  update(s=>{
+    const cur = (s.third3Override&&s.third3Override.length===8)
+      ? [...s.third3Override]
+      : getBest3rdPlaced();  // auto list
+    const newIdx = idx + dir;
+    if(newIdx<0||newIdx>7) return;
+    const tmp = cur[idx]; cur[idx]=cur[newIdx]; cur[newIdx]=tmp;
+    s.third3Override = cur;
+  });
+}
+
+function resetThird3(){
+  if(!requireAdmin()) return;
+  update(s=>{ s.third3Override = null; });
+}
+
 function init(){
   // URL seed takes priority
   const fromURL=loadFromURL();
