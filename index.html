@@ -703,7 +703,8 @@ function getGroupFinisher(src) {
 }
 
 function getBest3rdPlaced() {
-  // Collect all 3rd-placed teams across all groups, pick best 8 by pts/gd/gf
+  // Collect all 3rd-placed teams, rank by FIFA WC2026 tiebreaker:
+  // pts → gd → gf → goals against (fewer=better) → FIFA ranking (lower=better)
   const thirds = GROUP_KEYS.map(g => {
     const allPlayed = S.groupMatches[g].every(m=>m.played);
     if(!allPlayed) return null;
@@ -711,7 +712,13 @@ function getBest3rdPlaced() {
     return {...standings[2], group:g};
   }).filter(Boolean);
   if(thirds.length < 8) return [];
-  return thirds.sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf).slice(0,8).map(t=>t.team);
+  return thirds.sort((a,b)=>
+    b.pts-a.pts ||
+    b.gd-a.gd  ||
+    b.gf-a.gf  ||
+    a.ga-b.ga  ||
+    rank(a.team)-rank(b.team)
+  ).slice(0,8).map(t=>t.team);
 }
 
 function getMatchWinner(matchNum) {
