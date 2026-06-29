@@ -424,7 +424,7 @@ function initState() {
     koDraw[r.key]=[[],[],[],[],[],[],[],[]];
     koMatches[r.key]=r.matchNums.map(n=>({matchNum:n,team1:"",team2:"",goals1:"",goals2:"",penWinner:"",played:false}));
   });
-  return {playerNames:["Player 1","Player 2","Player 3","Player 4","Player 5","Player 6","Player 7","Player 8"],koQualifiers:[], third3Override:null,groupDraw,groupMatches,koDraw,koMatches,activeTab:"table",activeGroup:"A",activeKOPhase:"r32",activeMatchPhase:"group",locked:false};
+  return {playerNames:["Player 1","Player 2","Player 3","Player 4","Player 5","Player 6","Player 7","Player 8"],koQualifiers:[], third3Override:null, r32Overrides:{},groupDraw,groupMatches,koDraw,koMatches,activeTab:"table",activeGroup:"A",activeKOPhase:"r32",activeMatchPhase:"group",locked:false};
 }
 
 let S = initState();
@@ -757,16 +757,19 @@ function autoPopulateKO(state) {
   // Track all assigned teams globally to catch any cross-slot duplicates
   const usedInR32 = new Set();
 
-  // First pass: fill non-T3 slots
+  // First pass: fill non-T3 slots (skip manually overridden slots)
+  const ov = state.r32Overrides||{};
   R32_PATHS.forEach(([mNum, src1, src2]) => {
     const m = state.koMatches.r32.find(m=>m.matchNum===mNum);
     if(!m || m.played) return;
-    if(src1 !== "T3"){
+    if(ov[mNum+'_1']){ m.team1=ov[mNum+'_1']; usedInR32.add(m.team1); }
+    else if(src1 !== "T3"){
       const t = getGroupFinisher(src1);
       if(t && !usedInR32.has(t)){ m.team1=t; usedInR32.add(t); }
       else if(!t) m.team1="";
     }
-    if(src2 !== "T3"){
+    if(ov[mNum+'_2']){ m.team2=ov[mNum+'_2']; usedInR32.add(m.team2); }
+    else if(src2 !== "T3"){
       const t = getGroupFinisher(src2);
       if(t && !usedInR32.has(t)){ m.team2=t; usedInR32.add(t); }
       else if(!t) m.team2="";
@@ -780,12 +783,12 @@ function autoPopulateKO(state) {
   R32_PATHS.forEach(([mNum, src1, src2]) => {
     const m = state.koMatches.r32.find(m=>m.matchNum===mNum);
     if(!m || m.played) return;
-    if(src1 === "T3"){
+    if(src1 === "T3" && !ov[mNum+'_1']){
       const t = availableT3[t3i++]||"";
       if(t && !usedInR32.has(t)){ m.team1=t; usedInR32.add(t); }
       else m.team1="";
     }
-    if(src2 === "T3"){
+    if(src2 === "T3" && !ov[mNum+'_2']){
       const t = availableT3[t3i++]||"";
       if(t && !usedInR32.has(t)){ m.team2=t; usedInR32.add(t); }
       else m.team2="";
@@ -1827,6 +1830,10 @@ function saveKOTeam(matchNum, slot, value){
   update(s=>{
     const m = s.koMatches['r32'].find(m=>m.matchNum===matchNum);
     if(!m) return;
+    if(!s.r32Overrides) s.r32Overrides={};
+    const key = matchNum+'_'+slot;
+    if(teamName){ s.r32Overrides[key]=teamName; }
+    else { delete s.r32Overrides[key]; }
     if(slot===1) m.team1 = teamName;
     else m.team2 = teamName;
   });
@@ -1856,7 +1863,8 @@ function renderKOMatches(phase){
           <div style="font-size:10px;color:#333;margin-top:2px">${m.team1?"FIFA #"+rank(m.team1):""}</div>
           ${canEditTeams?`<input id="t1_${m.matchNum}" value="${esc(m.team1||'')}" placeholder="Enter team name"
             style="margin-top:4px;width:100%;background:#0d1a0d;border:1px solid #1a3a1a;color:#eee;padding:3px 6px;border-radius:4px;font-size:10px"
-            onchange="saveKOTeam(${m.matchNum},1,this.value)">`:``}
+            onchange="saveKOTeam(${m.matchNum},1,this.value)">
+            ${S.r32Overrides&&S.r32Overrides[m.matchNum+'_1']?`<button onclick="saveKOTeam(${m.matchNum},1,'')" style="margin-top:2px;font-size:9px;color:#e63946;background:none;border:none;cursor:pointer;padding:0">✕ clear override</button>`:``}`:``}
         </div>
         <div class="flex items-center gap6" style="flex-shrink:0">
           <input type="number" min="0" class="score-input" value="${m.goals1}"
@@ -1873,7 +1881,8 @@ function renderKOMatches(phase){
           <div style="font-size:10px;color:#333;margin-top:2px">${m.team2?"FIFA #"+rank(m.team2):""}</div>
           ${canEditTeams?`<input id="t2_${m.matchNum}" value="${esc(m.team2||'')}" placeholder="Enter team name"
             style="margin-top:4px;width:100%;background:#0d1a0d;border:1px solid #1a3a1a;color:#eee;padding:3px 6px;border-radius:4px;font-size:10px"
-            onchange="saveKOTeam(${m.matchNum},2,this.value)">`:``}
+            onchange="saveKOTeam(${m.matchNum},2,this.value)">
+            ${S.r32Overrides&&S.r32Overrides[m.matchNum+'_2']?`<button onclick="saveKOTeam(${m.matchNum},2,'')" style="margin-top:2px;font-size:9px;color:#e63946;background:none;border:none;cursor:pointer;padding:0">✕ clear override</button>`:``}`:``}
         </div>
         <button class="done-btn ${m.played?'active':''}"
           onclick="update(s=>{const m=s.koMatches['${phase}'][${idx}];if(m.goals1!==''&&m.goals2!==''){if(!m.played&&parseInt(m.goals1)===parseInt(m.goals2)&&!m.penWinner){alert('Scores level — select penalty winner first');return;}m.played=!m.played}})">
